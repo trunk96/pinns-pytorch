@@ -24,6 +24,6 @@ def ic_loss(x, model, ic_fn):
     out = model(net_in)
     out = out.view(len(out), -1)
 
-    ic = ic_fn(out, net_in)
+    [out, ic] = ic_fn(out, net_in)
     l_f = nn.MSELoss()
     return l_f(out, ic)
