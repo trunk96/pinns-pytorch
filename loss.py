@@ -5,7 +5,7 @@ import numpy as np
 
 def residual_loss(x, model, pde_fn):
 
-    net_in = torch.Tensor(x)
+    net_in = torch.Tensor(x).to(torch.device('cuda:0'))
     net_in.requires_grad = True
 
     out = model(net_in)
@@ -18,7 +18,7 @@ def residual_loss(x, model, pde_fn):
 
 def ic_loss(x, model, ic_fn):
 
-    net_in = torch.Tensor(x)
+    net_in = torch.Tensor(x).to(torch.device('cuda:0'))
     net_in.requires_grad = True
 
     out = model(net_in)

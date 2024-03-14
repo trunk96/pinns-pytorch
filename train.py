@@ -1,17 +1,16 @@
 import torch
 import numpy as np
 from loss import residual_loss, ic_loss
-from dataset import DomainDataset, ICDataset
 from torch.utils.data import DataLoader
 
 
-def train(model, epochs, batchsize, optimizer, pde_fn, ic_fns):
-    dataloader = DataLoader(DomainDataset, batch_size=batchsize,shuffle=True,num_workers = 0,drop_last = False)
-    ic_dataloader = DataLoader(ICDataset, batch_size=batchsize, shuffle=True, num_workers = 0, drop_last = False)
+def train(model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset):
+    dataloader = DataLoader(domaindataset, batch_size=batchsize,shuffle=True,num_workers = 0,drop_last = False)
+    ic_dataloader = DataLoader(icdataset, batch_size=batchsize, shuffle=True, num_workers = 0, drop_last = False)
 
     for epoch in range(epochs):
         for batch_idx, (x_in) in enumerate(dataloader):          
-            batch_idx, (x_ic) = next(iter(ic_dataloader))
+            (x_ic) = next(iter(ic_dataloader))
             model.zero_grad()
             loss_eqn = residual_loss(x_in, model, pde_fn)
             loss = loss_eqn

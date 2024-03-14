@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 from train import train
+from dataset import DomainDataset, ICDataset
 
 
 #components: [x, ic_p_0, ic_p_1, ic_p_2, ic_v_0, ic_v_1, ic_v_2, t]
@@ -19,6 +20,8 @@ def pde_fn(out, input):
     a = 1
     res = []
     for i in range(len(input)):
+        print(out[i])
+        print(input[i])
         dx = torch.autograd.grad(out[i], input[i], grad_outputs=torch.ones_like(input[i]), create_graph = True)
         ddx = torch.autograd.grad(dx, input[i], grad_outputs=torch.ones_like(input[i]), create_graph = True)
         res.append(ddx[-1] - a*ddx[0])
@@ -56,7 +59,10 @@ def ic_fn_vel(out, input):
 batchsize = 32
 learning_rate = 1e-3 
 
-model = PINN([8] + [100]*3 + [1], nn.ReLU, hard_constraint)
+domainDataset = DomainDataset([0.0]*8, [1.0]*8, 100)
+icDataset = ICDataset([0.0]*8, [1.0]*8, 100)
+
+model = PINN([8] + [100]*3 + [1], nn.ReLU, hard_constraint).to(torch.device('cuda:0'))
 optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 
-train(model, 1, 1, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel])
+train(model, 1, 1, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset)
