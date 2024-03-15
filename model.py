@@ -31,7 +31,6 @@ class PINN(nn.Module):
         self.hard_constraint_fn = hard_constraint_fn
 		
     def forward(self, x):
-        print(x)
         output = self.layers(x)
         if self.hard_constraint_fn != None:
             output = self.hard_constraint_fn(x, output)

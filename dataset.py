@@ -26,10 +26,10 @@ class DomainDataset(Dataset):
             xi.append(s)
         x = np.array(list(itertools.product(*xi)), dtype="f")
         #x = np.array(xi)
-        if self.n != len(x):
+        """ if self.n != len(x):
             print(
                 "Warning: {} points required, but {} points sampled.".format(self.n, len(x))
-            )
+            ) """
         return x[idx]
     
 
@@ -49,10 +49,10 @@ class ICDataset(DomainDataset):
                 xi.append([0]*ni)
 
         x = np.array(list(itertools.product(*xi)), dtype="f")
-        if self.n != len(x):
-            print(
-                "Warning: {} points required, but {} points sampled.".format(self.n, len(x))
-            )
+        #if self.n != len(x):
+            #print(
+            #    "Warning: {} points required, but {} points sampled.".format(self.n, len(x))
+            #)
         return x[idx]
 
    
