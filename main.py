@@ -56,6 +56,8 @@ domainDataset = DomainDataset([0.0]*8, [1.0]*8, 1000)
 icDataset = ICDataset([0.0]*8, [1.0]*8, 1000)
 
 model = PINN([8] + [100]*3 + [1], nn.ReLU, hard_constraint).to(torch.device('cuda:0'))
-optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
+# optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
+# optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
-train(model, 10, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset)
+train(model, 100, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset)
