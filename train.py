@@ -16,15 +16,17 @@ if not os.path.exists(model_dir):
 
 file_path = f"{output_dir}/train.txt"
 
+
 def train(model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset):
     dataloader = DataLoader(domaindataset, batch_size=batchsize,shuffle=True,num_workers = 0,drop_last = False)
     ic_dataloader = DataLoader(icdataset, batch_size=batchsize, shuffle=True, num_workers = 0, drop_last = False)
+    model.train(True)
     # Open the log file for writing
     with open(file_path, "w") as log_file:
         for epoch in range(epochs):
             for batch_idx, (x_in) in enumerate(dataloader):          
                 (x_ic) = next(iter(ic_dataloader))
-                model.zero_grad()
+                #print(f"{x_in}, {x_ic}")
                 x_in = torch.Tensor(x_in).to(torch.device('cuda:0'))
                 x_ic = torch.Tensor(x_ic).to(torch.device('cuda:0'))
                 loss_eqn = residual_loss(x_in, model, pde_fn)
@@ -32,7 +34,8 @@ def train(model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, ic
                 for i in range(len(ic_fns)):
                     loss_ic = ic_loss(x_ic, model, ic_fns[i])
                     loss += loss_ic
-                loss.requires_grad = True
+                #loss.requires_grad = True
+                optimizer.zero_grad()
                 loss.backward()
         
                 optimizer.step() 
