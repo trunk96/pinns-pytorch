@@ -6,19 +6,18 @@ import matplotlib.pyplot as plt
 import os
 
 losses = []  # To store losses
-name = "output"
 current_file = os.path.abspath(__file__)
-output_dir = os.path.join(os.path.dirname(current_file), name)
+output_dir = os.path.join(os.path.dirname(current_file), "output")
 
 model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-file_path = f"{output_dir}/train.txt"
-model_path = os.path.join(model_dir, "model.pt")
 
 
-def train(model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset):
+def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset):
+    model_path = os.path.join(model_dir, f"{name}.pt")
+    file_path = f"{output_dir}/train_{name}.txt"
     dataloader = DataLoader(domaindataset, batch_size=batchsize,shuffle=True,num_workers = 0,drop_last = False)
     ic_dataloader = DataLoader(icdataset, batch_size=batchsize, shuffle=True, num_workers = 0, drop_last = False)
     model.train(True)
@@ -59,5 +58,5 @@ def train(model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, ic
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
     plt.title('Training Loss')
-    plt.savefig(f'{output_dir}/training_loss.png')
+    plt.savefig(f'{output_dir}/training_loss_{name}.png')
     plt.show()

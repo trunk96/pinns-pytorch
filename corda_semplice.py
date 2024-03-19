@@ -9,6 +9,8 @@ from dataset import DomainDataset, ICDataset
 
 #components: [x, ic_p_0, ic_p_1, ic_p_2, ic_v_0, ic_v_1, ic_v_2, t]
 
+epochs = 100
+
 def hard_constraint(x, y):
     res = x[:, 0:1] * (1 - x[:, 0:1]) * y
     return res
@@ -56,4 +58,4 @@ model.apply(init_normal)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
-train(model, 100, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset)
+train("corda_semplice", model, epochs, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset)
