@@ -15,6 +15,7 @@ if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
 file_path = f"{output_dir}/train.txt"
+model_path = os.path.join(model_dir, "model.pt")
 
 
 def train(model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset):
@@ -51,13 +52,8 @@ def train(model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, ic
                     
                     losses.append(loss.item())  # Storing the loss
 
-        # Save the model
-    torch.save({
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'loss': loss,
-        }, os.path.join(model_dir, 'model.pth'))
+    # Save the model
+    torch.save(model, model_path)
     
     plt.plot(losses)
     plt.xlabel('Iterations')
