@@ -19,12 +19,12 @@ if not os.path.exists(model_dir):
 
 model_path = os.path.join(model_dir, 'corda_semplice.pt')
 
-a = 1
+a = 2
 
 
 def w1(x):
 
-    return np.sin(x/np.pi)
+    return np.sin(x*np.pi)
 
 
 def w2(z):
@@ -44,8 +44,13 @@ def compute_integral2(n):
     return result
 
 
+def exact(x):
+    x, t = np.split(x, 2, axis=1)
+    print(x)
+    print((w1(x-a*t) + w1(x+a*t))/2)
+    return (w1(x-a*t) + w1(x+a*t))/2
 
-def exact(x, n_max=3):
+def _exact(x, n_max=3):
     x, t = np.split(x, 2, axis=1)
     
     integrals = [compute_integral(n) for n in range(1, n_max+1)]
@@ -66,8 +71,8 @@ learning_rate = 1e-3
 domainDataset = DomainDataset([0.0]*2, [1.0]*2, 1000)
 icDataset = ICDataset([0.0]*2, [1.0]*2, 1000)
 
-model = PINN([2] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.device('cuda:0'))
-model = torch.load(model_path)
+#model = PINN([2] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.device('cuda:0'))
+#model = torch.load(model_path)
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 x = np.linspace(0, 1, num=100)
@@ -75,20 +80,22 @@ t = np.linspace(0, 1, num=100)
 xx, tt = np.meshgrid(x, t)
 X = np.vstack((np.ravel(xx), np.ravel(tt))).T
 
-Xp = torch.Tensor(X).to(torch.device('cuda:0'))
+#Xp = torch.Tensor(X).to(torch.device('cuda:0'))
+Xp = X
 ttrue = exact(X)
-ppred = model(Xp)
+ppred = _exact(Xp, n_max=50)
 
 la = len(np.unique(X[:, 0:1]))
 le = len(np.unique(X[:, 1:]))
 
-pred = ppred.reshape((le, la)).cpu()
-pred = pred.detach().numpy()
+#pred = ppred.reshape((le, la)).cpu()
+pred = ppred.reshape((le, la))
+#pred = pred.detach().numpy()
 true = ttrue.reshape((le, la))
 
 # Plot Theta Predicted
 im1 = axes[0].imshow(pred, cmap='inferno', aspect='auto', origin='lower',
-                        extent=[np.unique(X[:, 0:1]).min(), np.unique(X[:, 0:1]).max(), np.unique(X[:, 1:]).min(), np.unique(X[:, 1:]).max()], vmin=true.min(), vmax = true.max())
+                        extent=[np.unique(X[:, 0:1]).min(), np.unique(X[:, 0:1]).max(), np.unique(X[:, 1:]).min(), np.unique(X[:, 1:]).max()])#, vmin=true.min(), vmax = true.max())
 axes[0].set_title(f'Predicted')
 axes[0].set_xlabel('X')
 axes[0].set_ylabel('T')
