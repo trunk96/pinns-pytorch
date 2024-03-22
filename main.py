@@ -15,13 +15,9 @@ def hard_constraint(x, y):
 
 
 def pde_fn(prediction, sample):
-    # dudt = torch.autograd.grad(prediction, sample, create_graph=True, retain_graph=True)[0][0][-1]
-    # dudx = torch.autograd.grad(prediction, sample, create_graph=True, retain_graph=True)[0][0][0]
-    # dduddt = torch.autograd.grad(dudt, sample, retain_graph=True)[0][0][-1].reshape((1, 1))
-    # dduddx = torch.autograd.grad(dudx, sample, retain_graph=True)[0][0][0].reshape((1, 1))
     grads = torch.zeros_like(prediction)
     grads[:, 0] = 1
-    d = torch.autograd.grad(prediction, sample, grad_outputs=grads,create_graph = True, materialize_grads = True)[0]
+    d = torch.autograd.grad(prediction, sample, grad_outputs=grads,create_graph = True)[0]
     dd = torch.autograd.grad(d, sample, grad_outputs=torch.ones_like(d),create_graph = True)[0]
     a = 1
     return dd[:, -1] - a*dd[:, 0]
