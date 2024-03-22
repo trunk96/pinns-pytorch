@@ -9,6 +9,9 @@ from dataset import DomainDataset, ICDataset
 
 #components: [x, ic_p_0, ic_p_1, ic_p_2, ic_v_0, ic_v_1, ic_v_2, t]
 epochs = 100
+num_ic = 8
+num_inputs = 2 + (num_ic+2)*2 #x, t, 10 initial conditions on position, 10 initial conditions on velocity
+
 
 def hard_constraint(x, y):
     return x[:, 0:1] * (1 - x[:, 0:1]) * y
@@ -34,10 +37,10 @@ def interpolate(x, points, ic_points):
 
 def ic_fn_pos(prediction, sample):
     x = sample[:, 0]
-    points = [0, 0.25, 0.5, 0.75, 1]
+    points = np.linspace(0.0, 1.0, num_ic, endpoint=True)
     ics = []
     for i in range(x.shape[0]):
-        ic_points = [0, sample[i, 1], sample[i, 2], sample[i, 3], 0]
+        ic_points = [0] + [sample[i, j] for j in range(1, num_ic+1)] + [0]
         ic = interpolate(x[i], points, ic_points)
         ics.append(ic)
     ics = torch.Tensor(ics).to(device=prediction.device)#.reshape(prediction.shape)
@@ -45,10 +48,10 @@ def ic_fn_pos(prediction, sample):
 
 def ic_fn_vel(prediction, sample):
     x = sample[:, 0]
-    points = [0, 0.25, 0.5, 0.75, 1]
+    points = np.linspace(0.0, 1.0, num_ic, endpoint=True)
     ics = []
     for i in range(x.shape[0]):
-        ic_points = [0, sample[0][4], sample[0][5], sample[0][6], 0]
+        ic_points = [0] + [sample[i, j] for j in range(num_ic+1, 2*num_ic + 1)] + [0]
         ic = interpolate(x[i], points, ic_points)
         ics.append(ic)
     #dudt = torch.autograd.grad(prediction, sample, grad_outputs=torch.ones_like(prediction),create_graph = True,only_inputs=True)[0][:, -1]
@@ -61,9 +64,9 @@ def ic_fn_vel(prediction, sample):
 batchsize = 128
 learning_rate = 1e-3 
 
-num_inputs = 2 + 20 + 20 #x, t, 20 initial conditions on position, 20 initial conditions on velocity
-
+print("Building Domain Dataset")
 domainDataset = DomainDataset([0.0]*num_inputs, [1.0]*(num_inputs-1) + [0.05], 1000)
+print("Building IC Dataset")
 icDataset = ICDataset([0.0]*num_inputs, [1.0]*num_inputs, 1000)
 
 model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.device('cuda:0'))
