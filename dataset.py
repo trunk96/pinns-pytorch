@@ -13,11 +13,15 @@ class DomainDataset(Dataset):
         self.n = n
         self.side_length = self.xmax- self.xmin
         self.volume = np.prod(self.side_length)
+        self.compute_items()
 
     def __len__(self):
-        return self.n
+        return self.x.shape[0]
     
     def __getitem__(self, idx):
+        return self.x[idx]
+        
+    def compute_items(self):    
         dx = (self.volume / self.n) ** (1 / self.dim)
         xi = []
         for i in range(self.dim):
@@ -30,7 +34,7 @@ class DomainDataset(Dataset):
             print(
                 "Warning: {} points required, but {} points sampled.".format(self.n, len(x))
             ) """
-        return x[idx]
+        self.x = x
     
 
 class ICDataset(DomainDataset):
@@ -38,6 +42,9 @@ class ICDataset(DomainDataset):
         super().__init__(xmin, xmax, n)
     
     def __getitem__(self, idx):
+        return self.x[idx]
+    
+    def compute_items(self):
         dx = (self.volume / self.n) ** (1 / self.dim)
         xi = []
         for i in range(self.dim):
@@ -53,7 +60,7 @@ class ICDataset(DomainDataset):
             #print(
             #    "Warning: {} points required, but {} points sampled.".format(self.n, len(x))
             #)
-        return x[idx]
+        self.x = x
 
    
 class BCDataset(DomainDataset):

@@ -50,7 +50,9 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                         100. * batch_idx / len(dataloader), loss.item()))
                     
                     losses.append(loss.item())  # Storing the loss
-
+            if epoch % 20 == 0:
+                epoch_path = os.path.join(model_dir, f"{name}_{epoch}.pt")
+                torch.save(model, epoch_path)
     # Save the model
     torch.save(model, model_path)
     
