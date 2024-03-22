@@ -26,10 +26,11 @@ def pde_fn(prediction, sample):
     a = 1
     return dd[:, -1] - a*dd[:, 0]
 
-def ic_fn_pos(prediction, sample):
+def ic_fn_pos(predictio, sample):
+    prediction = predictio[:, 0]
     #print(sample)
     x = sample[:, 0]
-    ic = torch.sin(x/torch.pi)
+    ic = torch.sin(x*torch.pi)
     ic = torch.Tensor(ic).to(device=prediction.device).reshape(prediction.shape)
     return prediction, ic
 
