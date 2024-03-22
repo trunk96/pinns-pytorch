@@ -61,10 +61,12 @@ def ic_fn_vel(prediction, sample):
 batchsize = 128
 learning_rate = 1e-3 
 
-domainDataset = DomainDataset([0.0]*8, [1.0]*7 + [0.05], 1000)
-icDataset = ICDataset([0.0]*8, [1.0]*8, 1000)
+num_inputs = 2 + 20 + 20 #x, t, 20 initial conditions on position, 20 initial conditions on velocity
 
-model = PINN([8] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.device('cuda:0'))
+domainDataset = DomainDataset([0.0]*num_inputs, [1.0]*(num_inputs-1) + [0.05], 1000)
+icDataset = ICDataset([0.0]*num_inputs, [1.0]*num_inputs, 1000)
+
+model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.device('cuda:0'))
 
 def init_normal(m):
     if type(m) == torch.nn.Linear:
