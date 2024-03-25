@@ -9,8 +9,8 @@ from dataset import DomainDataset, ICDataset
 
 #components: [x, ic_p_0, ic_p_1, ic_p_2, ic_v_0, ic_v_1, ic_v_2, t]
 epochs = 100
-num_ic = 8
-num_inputs = 2 + (num_ic+2)*2 #x, t, 10 initial conditions on position, 10 initial conditions on velocity
+num_ic = 10
+num_inputs = 2 + (num_ic-2)*2 #x, t, 10 initial conditions on position, 10 initial conditions on velocity
 
 
 def hard_constraint(x, y):
@@ -40,7 +40,7 @@ def ic_fn_pos(prediction, sample):
     points = np.linspace(0.0, 1.0, num_ic, endpoint=True)
     ics = []
     for i in range(x.shape[0]):
-        ic_points = [0] + [sample[i, j] for j in range(1, num_ic+1)] + [0]
+        ic_points = [0] + [sample[i, j] for j in range(1, num_ic-1)] + [0]
         ic = interpolate(x[i], points, ic_points)
         ics.append(ic)
     ics = torch.Tensor(ics).to(device=prediction.device)#.reshape(prediction.shape)
@@ -51,7 +51,7 @@ def ic_fn_vel(prediction, sample):
     points = np.linspace(0.0, 1.0, num_ic, endpoint=True)
     ics = []
     for i in range(x.shape[0]):
-        ic_points = [0] + [sample[i, j] for j in range(num_ic+1, 2*num_ic + 1)] + [0]
+        ic_points = [0] + [sample[i, j] for j in range(num_ic-1, 2*(num_ic - 2)+1)] + [0]
         ic = interpolate(x[i], points, ic_points)
         ics.append(ic)
     #dudt = torch.autograd.grad(prediction, sample, grad_outputs=torch.ones_like(prediction),create_graph = True,only_inputs=True)[0][:, -1]
