@@ -70,7 +70,7 @@ class ICDataset(DomainDataset):
         super().__init__(xmin, xmax, n, rand=rand)
         
     def compute_items_sequential(self):
-        n_points_per_axis = np.ceil(self.n ** (1/self.dim))
+        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
         xi = []
         for i in range(self.dim):
             s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis + 1, endpoint=False)[1:]
@@ -80,7 +80,7 @@ class ICDataset(DomainDataset):
         return
 
     def compute_items_rand(self):
-        n_points_per_axis = np.ceil(self.n ** (1/self.dim))
+        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
         xi = []
         for i in range(self.dim):
             s = np.random.uniform(low=self.xmin[i], high=self.xmax[i], size=(n_points_per_axis, ))
