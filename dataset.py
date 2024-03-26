@@ -6,7 +6,7 @@ import itertools
 
 
 class DomainDataset(Dataset):
-    def __init__(self, xmin, xmax, n, rand = True):
+    def __init__(self, xmin, xmax, n, rand = True, shuffle = True, period = 1):
         self.xmin = np.array(xmin, dtype="f")
         self.xmax = np.array(xmax, dtype="f")
         self.dim = len(xmin)
@@ -14,20 +14,23 @@ class DomainDataset(Dataset):
         self.side_length = self.xmax - self.xmin
         self.volume = np.prod(self.side_length)
         self.rand = rand
+        self.shuffle = shuffle
+        self.period = period
         if self.rand:
-            self.counter = 0
             self.compute_items_rand()
         else:
-            self.compute_items_sequential()    
+            self.compute_items_sequential()   
+        if shuffle:
+            self.counter = 0 
 
     def __len__(self):
         return self.x.shape[0]
     
     def __getitem__(self, idx):
         ret = self.x[idx]
-        if self.rand:
+        if self.shuffle:
             self.counter += 1
-            if self.counter == self.__len__():
+            if self.counter == self.__len__()*self.period:
                 self.compute_items_rand()
                 self.counter = 0
         return ret

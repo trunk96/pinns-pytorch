@@ -66,10 +66,10 @@ learning_rate = 1e-3
 
 print("Building Domain Dataset")
 domainDataset = DomainDataset([0.0] + [-1.0]*(num_ic - 2) + [-1.0]*(num_ic - 2) + [0.0],
-                              [1.0] + [1.0]*(num_ic -2) + [1.0]*(num_ic -2) + [0.05], 1000)
+                              [1.0] + [1.0]*(num_ic -2) + [1.0]*(num_ic -2) + [0.05], 1000, period = 10)
 print("Building IC Dataset")
 icDataset = ICDataset([0.0] + [-1.0]*(num_ic - 2) + [-1.0]*(num_ic - 2),
-                      [1.0] + [1.0]*(num_ic -2) + [1.0]*(num_ic -2), 1000)
+                      [1.0] + [1.0]*(num_ic -2) + [1.0]*(num_ic -2), 1000, period = 10)
 
 model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.device('cuda:0'))
 
