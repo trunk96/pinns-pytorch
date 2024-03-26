@@ -48,13 +48,11 @@ class ICDataset(DomainDataset):
         dx = (self.volume / self.n) ** (1 / self.dim)
         xi = []
         for i in range(self.dim):
-            if i == self.dim - 1:
-                xi.append([0]*ni)
-            else:
-                ni = int(np.ceil(self.side_length[i] / dx))
-                s = np.linspace(self.xmin[i],self.xmax[i],num=ni + 1,endpoint=False)[1:]
-                xi.append(s)
-            
+            ni = int(np.ceil(self.side_length[i] / dx))
+            s = np.linspace(self.xmin[i],self.xmax[i],num=ni + 1,endpoint=False)[1:]
+            xi.append(s)
+        ni = int(np.ceil(self.side_length[0] / dx))
+        xi.append([0.0]*ni)          
 
         x = np.array(list(itertools.product(*xi)), dtype="f")
         #if self.n != len(x):

@@ -31,7 +31,7 @@ def hard_constraint(x, y):
 
 
 def w1(x):
-    ic = np.sin(x*np.pi)
+    ic = -np.sin(x*np.pi)
     return ic
 
 def w2(x):
@@ -59,10 +59,10 @@ model = torch.load(model_path)
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
-tt = np.linspace(0, 1, num=100)
-delta_t = 1/100
+tt = np.linspace(0, 1, num=20)
+delta_t = 1/20
 x = np.linspace(0, 1, num=100).reshape(-1, 1)
-x_ic = np.linspace(0, 1, num = num_ic - 1)
+x_ic = np.linspace(0, 1, num = num_ic - 1, endpoint = False)
 pos_ics = np.array([w1(x) for x in x_ic[1:]])
 vel_ics = np.array([w2(x) for x in x_ic[1:]])
 preds = []
@@ -70,18 +70,20 @@ for t in tt:
     if t != 0.0 and FLAG_STEP_BY_STEP:
         X = compose_input(x_ic[1:].reshape(-1, 1), pos_ics, vel_ics, delta_t)
         pred  = model(X)
-        #print(f"PRIMA: {pos_ics}")
+        print(f"PRIMA: {pos_ics}")
         pos_ics = pred[:, 0].cpu().detach().numpy()
-        #print(f"DOPO: {pos_ics}")
+        print(f"DOPO: {pos_ics}")
         vel_ics = pred[:, -1].cpu().detach().numpy()    
     if FLAG_STEP_BY_STEP:
         X = compose_input(x, pos_ics, vel_ics, tt[0])
     else:
         X = compose_input(x, pos_ics, vel_ics, t)
     pred = model(X)
+    """ if t == 0.0:
+        print(f"{x_ic[1:]}:{pos_ics}, {pred[:, 0]}") """
     preds.append(pred[:, 0].cpu().detach().numpy())
 preds = np.array(preds)
-print(preds)
+#print(preds)
 
 xx, tt = np.meshgrid(x, tt)
 X = np.vstack((np.ravel(xx), np.ravel(tt))).T
