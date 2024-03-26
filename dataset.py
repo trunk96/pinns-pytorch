@@ -11,7 +11,7 @@ class DomainDataset(Dataset):
         self.xmax = np.array(xmax, dtype="f")
         self.dim = len(xmin)
         self.n = n
-        self.side_length = self.xmax- self.xmin
+        self.side_length = self.xmax - self.xmin
         self.volume = np.prod(self.side_length)
         self.compute_items()
 
@@ -20,8 +20,17 @@ class DomainDataset(Dataset):
     
     def __getitem__(self, idx):
         return self.x[idx]
-        
-    def compute_items(self):    
+
+    def compute_items(self):
+        n_points_per_axis = np.ceil(self.n ** (1/self.dim))
+        xi = []
+        for i in range(self.dim):
+            s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis + 1, endpoint=False)[1:]
+            xi.append(s)
+        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        return
+
+    def _compute_items(self):    
         dx = (self.volume / self.n) ** (1 / self.dim)
         xi = []
         for i in range(self.dim):
@@ -45,6 +54,16 @@ class ICDataset(DomainDataset):
         return self.x[idx]
     
     def compute_items(self):
+        n_points_per_axis = np.ceil(self.n ** (1/self.dim))
+        xi = []
+        for i in range(self.dim):
+            s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis + 1, endpoint=False)[1:]
+            xi.append(s)
+        xi.append([0.0]*n_points_per_axis)
+        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        return
+    
+    def _compute_items(self):
         dx = (self.volume / self.n) ** (1 / self.dim)
         xi = []
         for i in range(self.dim):
