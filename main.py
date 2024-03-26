@@ -61,7 +61,7 @@ def ic_fn_vel(prediction, sample):
 
 
 
-batchsize = 128
+batchsize = 1024
 learning_rate = 1e-3 
 
 print("Building Domain Dataset")
