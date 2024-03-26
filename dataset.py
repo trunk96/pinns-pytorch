@@ -29,6 +29,7 @@ class DomainDataset(Dataset):
             self.counter += 1
             if self.counter == self.__len__():
                 self.compute_items_rand()
+                self.counter = 0
         return ret
     
     def compute_items_sequential(self):
@@ -67,10 +68,7 @@ class DomainDataset(Dataset):
 class ICDataset(DomainDataset):
     def __init__(self, xmin, xmax, n, rand=True):
         super().__init__(xmin, xmax, n, rand=rand)
-    
-    def __getitem__(self, idx):
-        return self.x[idx]
-    
+        
     def compute_items_sequential(self):
         n_points_per_axis = np.ceil(self.n ** (1/self.dim))
         xi = []
