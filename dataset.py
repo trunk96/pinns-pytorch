@@ -6,22 +6,32 @@ import itertools
 
 
 class DomainDataset(Dataset):
-    def __init__(self, xmin, xmax, n):
+    def __init__(self, xmin, xmax, n, rand = True):
         self.xmin = np.array(xmin, dtype="f")
         self.xmax = np.array(xmax, dtype="f")
         self.dim = len(xmin)
         self.n = n
         self.side_length = self.xmax - self.xmin
         self.volume = np.prod(self.side_length)
-        self.compute_items()
+        self.rand = rand
+        if self.rand:
+            self.counter = 0
+            self.compute_items_rand()
+        else:
+            self.compute_items_sequential()    
 
     def __len__(self):
         return self.x.shape[0]
     
     def __getitem__(self, idx):
-        return self.x[idx]
-
-    def compute_items(self):
+        ret = self.x[idx]
+        if self.rand:
+            self.counter += 1
+            if self.counter == self.__len__():
+                self.compute_items_rand()
+        return ret
+    
+    def compute_items_sequential(self):
         n_points_per_axis = np.ceil(self.n ** (1/self.dim))
         xi = []
         for i in range(self.dim):
@@ -29,6 +39,14 @@ class DomainDataset(Dataset):
             xi.append(s)
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
         return
+
+    def compute_items_rand(self):
+        n_points_per_axis = np.ceil(self.n ** (1/self.dim))
+        xi = []
+        for i in range(self.dim):
+            s = np.random.uniform(low=self.xmin[i], high=self.xmax[i], size=(n_points_per_axis, ))
+            xi.append(s)
+        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
 
     def _compute_items(self):    
         dx = (self.volume / self.n) ** (1 / self.dim)
@@ -47,13 +65,13 @@ class DomainDataset(Dataset):
     
 
 class ICDataset(DomainDataset):
-    def __init__(self, xmin, xmax, n):
-        super().__init__(xmin, xmax, n)
+    def __init__(self, xmin, xmax, n, rand=True):
+        super().__init__(xmin, xmax, n, rand=rand)
     
     def __getitem__(self, idx):
         return self.x[idx]
     
-    def compute_items(self):
+    def compute_items_sequential(self):
         n_points_per_axis = np.ceil(self.n ** (1/self.dim))
         xi = []
         for i in range(self.dim):
@@ -62,6 +80,15 @@ class ICDataset(DomainDataset):
         xi.append([0.0]*n_points_per_axis)
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
         return
+
+    def compute_items_rand(self):
+        n_points_per_axis = np.ceil(self.n ** (1/self.dim))
+        xi = []
+        for i in range(self.dim):
+            s = np.random.uniform(low=self.xmin[i], high=self.xmax[i], size=(n_points_per_axis, ))
+            xi.append(s)
+        xi.append([0.0]*n_points_per_axis)
+        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
     
     def _compute_items(self):
         dx = (self.volume / self.n) ** (1 / self.dim)
