@@ -23,7 +23,7 @@ model_path = os.path.join(model_dir, 'main.pt')
 num_ic = 10
 num_inputs = 2 + (num_ic-2)*2 #x, t, 10 initial conditions on position, 10 initial conditions on velocity
 
-FLAG_STEP_BY_STEP = True
+FLAG_STEP_BY_STEP = False
 
 def hard_constraint(x, y):
     res = x[:, 0:1] * (1 - x[:, 0:1]) * y
