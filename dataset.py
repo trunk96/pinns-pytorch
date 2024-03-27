@@ -69,8 +69,8 @@ class DomainDataset(Dataset):
     
 
 class ICDataset(DomainDataset):
-    def __init__(self, xmin, xmax, n, rand=True):
-        super().__init__(xmin, xmax, n, rand=rand)
+    def __init__(self, xmin, xmax, n, rand=True, shuffle = True, period = 1):
+        super().__init__(xmin, xmax, n, rand = rand, shuffle = shuffle, period = period)
         
     def compute_items_sequential(self):
         n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
