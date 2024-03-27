@@ -51,6 +51,7 @@ class DomainDataset(Dataset):
             s = np.random.uniform(low=self.xmin[i], high=self.xmax[i], size=(n_points_per_axis, ))
             xi.append(s)
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        return
 
     def _compute_items(self):    
         dx = (self.volume / self.n) ** (1 / self.dim)
@@ -78,7 +79,7 @@ class ICDataset(DomainDataset):
         for i in range(self.dim):
             s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis + 1, endpoint=False)[1:]
             xi.append(s)
-        xi.append([0.0]*n_points_per_axis)
+        xi.append([0.0])
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
         return
 
@@ -88,8 +89,9 @@ class ICDataset(DomainDataset):
         for i in range(self.dim):
             s = np.random.uniform(low=self.xmin[i], high=self.xmax[i], size=(n_points_per_axis, ))
             xi.append(s)
-        xi.append([0.0]*n_points_per_axis)
+        xi.append([0.0])
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        return
     
     def _compute_items(self):
         dx = (self.volume / self.n) ** (1 / self.dim)
@@ -129,6 +131,31 @@ class ValidationDataset(DomainDataset):
             s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, ))
             xi.append(s)
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        return
+    
+class ValidationICDataset(DomainDataset):
+    def __init__(self, xmin, xmax, n, rand=True, shuffle=False, period=1):
+        super().__init__(xmin, xmax, n, rand, shuffle, period)
+    
+    def compute_items_sequential(self):
+        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
+        xi = []
+        for i in range(self.dim):
+            s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True)
+            xi.append(s)
+        xi.append([0.0])
+        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        return
+
+    def compute_items_rand(self):
+        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
+        xi = []
+        for i in range(self.dim):
+            s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, ))
+            xi.append(s)
+        xi.append([0.0])
+        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        return
 
 
 class BCDataset(DomainDataset):

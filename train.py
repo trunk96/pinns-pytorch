@@ -15,13 +15,14 @@ if not os.path.exists(model_dir):
 
 
 
-def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset, validationdataset = None):
+def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset, validationdatasets = None):
     model_path = os.path.join(model_dir, f"{name}.pt")
     file_path = f"{output_dir}/train_{name}.txt"
     dataloader = DataLoader(domaindataset, batch_size=batchsize,shuffle=True,num_workers = 0,drop_last = False)
     ic_dataloader = DataLoader(icdataset, batch_size=batchsize, shuffle=True, num_workers = 0, drop_last = False)
-    if validationdataset != None:
-        validation_dataloader = DataLoader(validationdataset, batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
+    if validationdatasets != None and len(validationdatasets) == 2:
+        validation_dataloader = DataLoader(validationdatasets[0], batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
+        validation_ic_dataloader = DataLoader(validationdatasets[1], batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
     # Open the log file for writing
     with open(file_path, "w") as log_file:
         for epoch in range(epochs):
@@ -53,10 +54,11 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                     
                     losses.append(loss.item())  # Storing the loss
             
-            if validationdataset != None:
+            if validationdatasets != None and len(validationdatasets) == 2:
                 model.eval()
                 validation_losses = []
                 for batch_idx, (x_in) in enumerate(validation_dataloader):
+                    (x_ic) = next(iter(validation_ic_dataloader))
                     x_in = torch.Tensor(x_in).to(torch.device('cuda:0'))
                     x_ic = torch.Tensor(x_ic).to(torch.device('cuda:0'))
                     loss_eqn = residual_loss(x_in, model, pde_fn)

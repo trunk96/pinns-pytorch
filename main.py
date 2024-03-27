@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 from train import train
-from dataset import DomainDataset, ICDataset, ValidationDataset
+from dataset import DomainDataset, ICDataset, ValidationDataset, ValidationICDataset
 
 
 #components: [x, ic_p_0, ic_p_1, ic_p_2, ic_v_0, ic_v_1, ic_v_2, t]
@@ -70,9 +70,12 @@ domainDataset = DomainDataset([0.0] + [-1.0]*(num_ic - 2) + [-1.0]*(num_ic - 2) 
 print("Building IC Dataset")
 icDataset = ICDataset([0.0] + [-1.0]*(num_ic - 2) + [-1.0]*(num_ic - 2),
                       [1.0] + [1.0]*(num_ic -2) + [1.0]*(num_ic -2), 1000, period = 5)
-print("Building ValidationDataset")
+print("Building Validation Dataset")
 validationDataset = ValidationDataset([0.0] + [-1.0]*(num_ic - 2) + [-1.0]*(num_ic - 2) + [0.0],
                                       [1.0] + [1.0]*(num_ic -2) + [1.0]*(num_ic -2) + [1.0], 1000)
+print("Building Validation IC Dataset")
+validationicDataset = ValidationICDataset([0.0] + [-1.0]*(num_ic - 2) + [-1.0]*(num_ic - 2),
+                      [1.0] + [1.0]*(num_ic -2) + [1.0]*(num_ic -2), 1000)
 
 model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.device('cuda:0'))
 
@@ -85,4 +88,4 @@ model.apply(init_normal)
 optimizer = optim.Adam(model.parameters(), lr=0.01)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
-train("main", model, epochs, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset, validationdataset = validationDataset)
+train("main", model, epochs, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset, validationdatasets = (validationDataset, validationicDataset))
