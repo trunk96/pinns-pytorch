@@ -117,20 +117,20 @@ class ValidationDataset(DomainDataset):
     
     def compute_items_sequential(self):
         n_points_per_axis = self.n
-        xi = np.array([])
+        xi = np.zeros(shape = (n_points_per_axis, 1))
         for i in range(self.dim):
             s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True).reshape(-1, 1)
             xi = np.hstack((xi, s))
-        self.x = xi
+        self.x = xi[:, 1]
         return
 
     def compute_items_rand(self):
         n_points_per_axis = self.n
-        xi = np.array([])
+        xi = np.zeros(shape = (n_points_per_axis, 1))
         for i in range(self.dim):
             s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, )).reshape(-1, 1)
             xi = np.hstack((xi, s))
-        self.x = xi
+        self.x = xi[:, 1]
         return
     
 class ValidationICDataset(DomainDataset):
@@ -139,24 +139,24 @@ class ValidationICDataset(DomainDataset):
     
     def compute_items_sequential(self):
         n_points_per_axis = self.n
-        xi = np.array([])
+        xi = np.zeros(shape = (n_points_per_axis, 1))
         for i in range(self.dim):
             s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True).reshape(-1, 1)
             xi = np.hstack((xi, s))
         z = np.zeros((n_points_per_axis, 1))
         xi = np.hstack((xi, z))
-        self.x = xi
+        self.x = xi[:, 1]
         return
 
     def compute_items_rand(self):
         n_points_per_axis = self.n
-        xi = np.array([])
+        xi = np.zeros(shape = (n_points_per_axis, 1))
         for i in range(self.dim):
             s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, )).reshape(-1, 1)
             xi = np.hstack((xi, s))
         z = np.zeros((n_points_per_axis, 1))
         xi = np.hstack((xi, z))
-        self.x = xi
+        self.x = xi[:, 1]
         return
 
 
