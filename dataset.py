@@ -117,12 +117,20 @@ class ValidationDataset(DomainDataset):
     
     def compute_items_sequential(self):
         n_points_per_axis = self.n
-        self.x = np.linspace(self.xmin, self.xmax, num = n_points_per_axis, endpoint = True)
+        xi = np.array([])
+        for i in range(self.dim):
+            s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True).reshape(-1, 1)
+            xi = np.hstack((xi, s))
+        self.x = xi
         return
 
     def compute_items_rand(self):
         n_points_per_axis = self.n
-        self.x = np.random.uniform(low=self.xmin, high=np.nextafter(self.xmax, self.xmax+1), size=(n_points_per_axis, ))
+        xi = np.array([])
+        for i in range(self.dim):
+            s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, )).reshape(-1, 1)
+            xi = np.hstack((xi, s))
+        self.x = xi
         return
     
 class ValidationICDataset(DomainDataset):
@@ -131,12 +139,24 @@ class ValidationICDataset(DomainDataset):
     
     def compute_items_sequential(self):
         n_points_per_axis = self.n
-        self.x = np.linspace(self.xmin, self.xmax, num = n_points_per_axis, endpoint = True)
+        xi = np.array([])
+        for i in range(self.dim):
+            s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True).reshape(-1, 1)
+            xi = np.hstack((xi, s))
+        z = np.zeros((n_points_per_axis, 1))
+        xi = np.hstack((xi, z))
+        self.x = xi
         return
 
     def compute_items_rand(self):
         n_points_per_axis = self.n
-        self.x = np.random.uniform(low=self.xmin, high=np.nextafter(self.xmax, self.xmax+1), size=(n_points_per_axis, ))
+        xi = np.array([])
+        for i in range(self.dim):
+            s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, )).reshape(-1, 1)
+            xi = np.hstack((xi, s))
+        z = np.zeros((n_points_per_axis, 1))
+        xi = np.hstack((xi, z))
+        self.x = xi
         return
 
 
