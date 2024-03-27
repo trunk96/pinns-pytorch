@@ -5,7 +5,8 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
 
-losses = []  # To store losses
+train_losses = []  # To store losses
+test_losses = []
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), "output")
 
@@ -52,7 +53,7 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                         epoch, batch_idx, int(len(dataloader.dataset)/batchsize),
                         100. * batch_idx / len(dataloader), loss.item()))
                     
-                    losses.append(loss.item())  # Storing the loss
+                train_losses.append(loss.item())  # Storing the loss
             
             if validationdatasets != None and len(validationdatasets) == 2:
                 model.eval()
@@ -69,6 +70,8 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                     validation_losses.append(loss.item())
                 print('Validation Epoch: {} \tLoss: {:.10f}'.format(
                         epoch, np.average(validation_losses)))
+                log_file.write('Validation Epoch: {} \tLoss: {:.10f}'.format(epoch, np.average(validation_losses)))
+                test_losses.append(np.average(validation_losses))
                     
             if epoch % 20 == 0:
                 epoch_path = os.path.join(model_dir, f"{name}_{epoch}.pt")
@@ -77,9 +80,14 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
     # Save the model
     torch.save(model, model_path)
     
-    plt.plot(losses)
+    plt.plot(train_losses)
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
     plt.title('Training Loss')
     plt.savefig(f'{output_dir}/training_loss_{name}.png')
+    plt.plot(test_losses)
+    plt.xlabel('Iterations')
+    plt.ylabel('Loss')
+    plt.title('Training Loss')
+    plt.savefig(f'{output_dir}/test_loss_{name}.png')
     plt.show()
