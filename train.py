@@ -15,15 +15,17 @@ if not os.path.exists(model_dir):
 
 
 
-def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset):
+def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset, validationdataset = None):
     model_path = os.path.join(model_dir, f"{name}.pt")
     file_path = f"{output_dir}/train_{name}.txt"
     dataloader = DataLoader(domaindataset, batch_size=batchsize,shuffle=True,num_workers = 0,drop_last = False)
     ic_dataloader = DataLoader(icdataset, batch_size=batchsize, shuffle=True, num_workers = 0, drop_last = False)
-    model.train(True)
+    if validationdataset != None:
+        validation_dataloader = DataLoader(validationdataset, batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
     # Open the log file for writing
     with open(file_path, "w") as log_file:
         for epoch in range(epochs):
+            model.train(True)
             for batch_idx, (x_in) in enumerate(dataloader):          
                 (x_ic) = next(iter(ic_dataloader))
                 #print(f"{x_in}, {x_ic}")
@@ -50,9 +52,26 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                         100. * batch_idx / len(dataloader), loss.item()))
                     
                     losses.append(loss.item())  # Storing the loss
+            
+            if validationdataset != None:
+                model.eval()
+                validation_losses = []
+                for batch_idx, (x_in) in enumerate(validation_dataloader):
+                    x_in = torch.Tensor(x_in).to(torch.device('cuda:0'))
+                    x_ic = torch.Tensor(x_ic).to(torch.device('cuda:0'))
+                    loss_eqn = residual_loss(x_in, model, pde_fn)
+                    loss = loss_eqn
+                    for i in range(len(ic_fns)):
+                        loss_ic = ic_loss(x_ic, model, ic_fns[i])
+                        loss += loss_ic
+                    validation_losses.append(loss.item())
+                print('Validation Epoch: {} \tLoss: {:.10f}'.format(
+                        epoch, np.average(validation_losses)))
+                    
             if epoch % 20 == 0:
                 epoch_path = os.path.join(model_dir, f"{name}_{epoch}.pt")
                 torch.save(model, epoch_path)
+                
     # Save the model
     torch.save(model, model_path)
     

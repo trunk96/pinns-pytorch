@@ -108,7 +108,29 @@ class ICDataset(DomainDataset):
             #)
         self.x = x
 
-   
+
+class ValidationDataset(DomainDataset):
+    def __init__(self, xmin, xmax, n, rand=True, shuffle=False, period=1):
+        super().__init__(xmin, xmax, n, rand, shuffle, period)
+    
+    def compute_items_sequential(self):
+        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
+        xi = []
+        for i in range(self.dim):
+            s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True)
+            xi.append(s)
+        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        return
+
+    def compute_items_rand(self):
+        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
+        xi = []
+        for i in range(self.dim):
+            s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, ))
+            xi.append(s)
+        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+
+
 class BCDataset(DomainDataset):
     def __init__(self, xmin, xmax, n):
         super().__init__(xmin, xmax, n)
