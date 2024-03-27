@@ -116,21 +116,13 @@ class ValidationDataset(DomainDataset):
         super().__init__(xmin, xmax, n, rand, shuffle, period)
     
     def compute_items_sequential(self):
-        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
-        xi = []
-        for i in range(self.dim):
-            s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True)
-            xi.append(s)
-        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        n_points_per_axis = self.n
+        self.x = np.linspace(self.xmin, self.xmax, num = n_points_per_axis, endpoint = True)
         return
 
     def compute_items_rand(self):
-        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
-        xi = []
-        for i in range(self.dim):
-            s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, ))
-            xi.append(s)
-        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        n_points_per_axis = self.n
+        self.x = np.random.uniform(low=self.xmin, high=np.nextafter(self.xmax, self.xmax+1), size=(n_points_per_axis, ))
         return
     
 class ValidationICDataset(DomainDataset):
@@ -138,23 +130,13 @@ class ValidationICDataset(DomainDataset):
         super().__init__(xmin, xmax, n, rand, shuffle, period)
     
     def compute_items_sequential(self):
-        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
-        xi = []
-        for i in range(self.dim):
-            s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True)
-            xi.append(s)
-        xi.append([0.0])
-        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        n_points_per_axis = self.n
+        self.x = np.linspace(self.xmin, self.xmax, num = n_points_per_axis, endpoint = True)
         return
 
     def compute_items_rand(self):
-        n_points_per_axis = int(np.ceil(self.n ** (1/self.dim)))
-        xi = []
-        for i in range(self.dim):
-            s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, ))
-            xi.append(s)
-        xi.append([0.0])
-        self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        n_points_per_axis = self.n
+        self.x = np.random.uniform(low=self.xmin, high=np.nextafter(self.xmax, self.xmax+1), size=(n_points_per_axis, ))
         return
 
 
