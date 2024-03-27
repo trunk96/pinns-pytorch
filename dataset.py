@@ -51,6 +51,7 @@ class DomainDataset(Dataset):
             s = np.random.uniform(low=self.xmin[i], high=self.xmax[i], size=(n_points_per_axis, ))
             xi.append(s)
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        print(self.x[0])
         return
 
     def _compute_items(self):    
@@ -91,6 +92,7 @@ class ICDataset(DomainDataset):
             xi.append(s)
         xi.append([0.0])
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
+        print(self.x[0])
         return
     
     def _compute_items(self):
@@ -121,7 +123,7 @@ class ValidationDataset(DomainDataset):
         for i in range(self.dim):
             s = np.linspace(self.xmin[i], self.xmax[i], num = n_points_per_axis, endpoint = True).reshape(-1, 1)
             xi = np.hstack((xi, s))
-        self.x = xi[:, 1]
+        self.x = xi[:, 1:]
         return
 
     def compute_items_rand(self):
@@ -130,7 +132,7 @@ class ValidationDataset(DomainDataset):
         for i in range(self.dim):
             s = np.random.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(n_points_per_axis, )).reshape(-1, 1)
             xi = np.hstack((xi, s))
-        self.x = xi[:, 1]
+        self.x = xi[:, 1:]
         return
     
 class ValidationICDataset(DomainDataset):
@@ -145,7 +147,7 @@ class ValidationICDataset(DomainDataset):
             xi = np.hstack((xi, s))
         z = np.zeros((n_points_per_axis, 1))
         xi = np.hstack((xi, z))
-        self.x = xi[:, 1]
+        self.x = xi[:, 1:]
         return
 
     def compute_items_rand(self):
@@ -156,7 +158,7 @@ class ValidationICDataset(DomainDataset):
             xi = np.hstack((xi, s))
         z = np.zeros((n_points_per_axis, 1))
         xi = np.hstack((xi, z))
-        self.x = xi[:, 1]
+        self.x = xi[:, 1:]
         return
 
 
