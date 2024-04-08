@@ -22,13 +22,8 @@ def f(sample):
     height = sample[:, 4]
     t = sample[:, -1]
 
-    t_target = 0.5
-    if t < t_target:
-        za = - 300*height * np.exp((-1 / 10)*((x-x_f)**2+(y-y_f)**2)) * np.exp(t-t_target)
-    elif t > t_target :
-        za = - 300*height * np.exp((-1 / 10)*((x-x_f)**2+(y-y_f)**2)) * np.exp(t_target-t)
-    else:
-        za = -300*height
+    alpha = 9
+    za = 300*height * torch.exp((-1 / 10)*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
 def pde_fn(prediction, sample):

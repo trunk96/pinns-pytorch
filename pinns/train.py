@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from loss import residual_loss, ic_loss
+from pinns.loss import residual_loss, ic_loss
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
