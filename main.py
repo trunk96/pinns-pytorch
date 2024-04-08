@@ -1,10 +1,10 @@
-from model import PINN
+from pinns.model import PINN
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from train import train
-from dataset import DomainDataset, ICDataset, ValidationDataset, ValidationICDataset
+from pinns.train import train
+from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, ValidationICDataset
 
 
 #components: [x, ic_p_0, ic_p_1, ic_p_2, ic_v_0, ic_v_1, ic_v_2, t]

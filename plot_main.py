@@ -23,7 +23,7 @@ model_path = os.path.join(model_dir, 'main.pt')
 num_ic = 10
 num_inputs = 2 + (num_ic-2)*2 #x, t, 10 initial conditions on position, 10 initial conditions on velocity
 
-FLAG_STEP_BY_STEP = False
+FLAG_STEP_BY_STEP = True
 
 def hard_constraint(x, y):
     res = x[:, 0:1] * (1 - x[:, 0:1]) * y
@@ -31,7 +31,7 @@ def hard_constraint(x, y):
 
 
 def w1(x):
-    ic = -np.sin(x*np.pi)
+    ic = np.sin(x*np.pi)
     return ic
 
 def w2(x):
@@ -59,8 +59,8 @@ model = torch.load(model_path)
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
-tt = np.linspace(0, 1, num=20)
-delta_t = 1/20
+tt = np.linspace(0, 1, num=10)
+delta_t = 1/10
 x = np.linspace(0, 1, num=100).reshape(-1, 1)
 x_ic = np.linspace(0, 1, num = num_ic - 1, endpoint = False)
 pos_ics = np.array([w1(x) for x in x_ic[1:]])
