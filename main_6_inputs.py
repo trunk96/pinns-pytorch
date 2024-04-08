@@ -12,7 +12,7 @@ num_inputs = 6 #x, y, x_f, y_f, f, t
 
 
 def hard_constraint(x, y):
-    return x[:, 0:1] * (1 - x[:, 0:1]) * y
+    return x[:, 0:1] * (1 - x[:, 0:1]) * (x[:, 1:2]) * (1 - x[:, 1:2]) * y
 
 def f(sample):
     x = sample[:, 0]
