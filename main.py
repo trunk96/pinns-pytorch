@@ -23,7 +23,7 @@ def pde_fn(prediction, sample):
     d = torch.autograd.grad(prediction, sample, grad_outputs=grads,create_graph = True)[0]
     dd = torch.autograd.grad(d, sample, grad_outputs=torch.ones_like(d),create_graph = True)[0]
     a = 1
-    return dd[:, -1] - a*dd[:, 0]
+    return dd[:, -1] - (a**2)*dd[:, 0]
 
 def interpolate(x, points, ic_points):
     if x in points:
