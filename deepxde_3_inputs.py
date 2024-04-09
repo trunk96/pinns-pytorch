@@ -10,7 +10,7 @@ import torch
 
 
 
-epochs = 1000
+epochs = 20000
 name = "pinns_3_inputs"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
@@ -50,7 +50,7 @@ def force(sample):
     t = sample[:, -1]
 
     alpha = 8.9
-    za = -height * torch.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    za = - 300 * height * torch.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
 
