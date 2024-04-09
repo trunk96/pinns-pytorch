@@ -57,9 +57,9 @@ batchsize = 1024
 learning_rate = 1e-3 
 
 print("Building Domain Dataset")
-domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 100000, period = 3)
+domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 1000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 100000, period = 3)
+icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 200, period = 3)
 print("Building Validation Dataset")
 validationDataset = ValidationDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize)
 print("Building Validation IC Dataset")

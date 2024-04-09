@@ -56,13 +56,13 @@ def ic_fn_vel(prediction, sample):
 
 
 
-batchsize = 1024
+batchsize = 10000
 learning_rate = 1e-3 
 
 print("Building Domain Dataset")
-domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 100000, period = 3)
+domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 100000, period = 3)
+icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 2000, period = 3)
 print("Building Validation Dataset")
 validationDataset = ValidationDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize)
 print("Building Validation IC Dataset")
@@ -72,7 +72,7 @@ model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.de
 
 def init_normal(m):
     if type(m) == torch.nn.Linear:
-        torch.nn.init.kaiming_normal_(m.weight)
+        torch.nn.init.xavier_uniform_(m.weight)
 
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
