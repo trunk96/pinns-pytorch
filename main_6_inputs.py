@@ -22,8 +22,8 @@ def f(sample):
     height = sample[:, 4]
     t = sample[:, -1]
 
-    alpha = 9
-    za = 300*height * torch.exp((-1 / 10)*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    alpha = 8.9
+    za = height * torch.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
 def pde_fn(prediction, sample):
