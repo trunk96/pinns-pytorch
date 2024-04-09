@@ -8,7 +8,7 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 
 
 epochs = 100
-num_inputs = 6 #x, y, x_f, y_f, f, t
+num_inputs = 3 #x, y, t
 
 
 def hard_constraint(x, y):
@@ -17,9 +17,12 @@ def hard_constraint(x, y):
 def f(sample):
     x = sample[:, 0]
     y = sample[:, 1]
-    x_f = sample[:, 2]
+    """ x_f = sample[:, 2]
     y_f = sample[:, 3]
-    height = sample[:, 4]
+    height = sample[:, 4] """
+    x_f = 0.8
+    y_f = 0.8
+    height = 1
     t = sample[:, -1]
 
     alpha = 8.9
@@ -73,7 +76,7 @@ def init_normal(m):
 
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 train("main", model, epochs, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset, validationdatasets = (validationDataset, validationicDataset))

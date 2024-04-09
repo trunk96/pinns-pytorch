@@ -7,7 +7,7 @@ import os
 
 train_losses = []  # To store losses
 test_losses = []
-current_file = os.path.abspath(__file__)
+current_file = os.path.abspath(".")
 output_dir = os.path.join(os.path.dirname(current_file), "output")
 
 model_dir = os.path.join(output_dir, "model")
