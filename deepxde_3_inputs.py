@@ -50,7 +50,7 @@ def force(sample):
     t = sample[:, -1]
 
     alpha = 8.9
-    za = - 300 * height * torch.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    za = - 100 * height * torch.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
 
@@ -158,7 +158,7 @@ def create_model():
 
 def train(mm):
 
-    pde_residual_resampler = dde.callbacks.PDEPointResampler(period=3)
+    pde_residual_resampler = dde.callbacks.PDEPointResampler(period=100)
     # early_stopping = dde.callbacks.EarlyStopping(min_delta=1e-6, patience=5000)
     losshistory, train_state = mm.train(
         iterations=epochs, callbacks=[pde_residual_resampler], display_every=500, model_save_path=f"{output_dir}/pinns_{name}"
