@@ -7,7 +7,7 @@ from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, ValidationICDataset
 
 
-epochs = 100
+epochs = 1000
 num_inputs = 3 #x, y, t
 
 
@@ -60,9 +60,9 @@ batchsize = 10000
 learning_rate = 1e-3 
 
 print("Building Domain Dataset")
-domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
+domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 100000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 2000, period = 3)
+icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 20000, period = 3)
 print("Building Validation Dataset")
 validationDataset = ValidationDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize)
 print("Building Validation IC Dataset")
