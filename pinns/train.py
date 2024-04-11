@@ -8,7 +8,7 @@ import os
 train_losses = []  # To store losses
 test_losses = []
 current_file = os.getcwd()
-output_dir = os.path.join(os.path.dirname(current_file), "output")
+output_dir = os.path.join(current_file, "output")
 
 model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
