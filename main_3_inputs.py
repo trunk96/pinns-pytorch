@@ -8,11 +8,11 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 
 
 epochs = 1000
-num_inputs = 3 #x, y, t
+num_inputs = 2 #x, t
 
 
 def hard_constraint(x, y):
-    return x[:, 0:1] * (1 - x[:, 0:1]) * (x[:, 1:2]) * (1 - x[:, 1:2]) * y
+    return x[:, 0:1] * (1 - x[:, 0:1]) * y
 
 def f(sample):
     x = sample[:, 0]
@@ -26,25 +26,20 @@ def f(sample):
     t = sample[:, -1]
 
     alpha = 8.9
-    za = -height * torch.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    za = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
 def pde_fn(prediction, sample):
-    # rubber parameters
-    v = 0.4999 # Poisson ratio, always in [-1, 0.5], with 0.5 meaning incompressible material
-    E = 3e6 # Young's modulus in Pa
-    h = 0.01 # thinkness of the surface in meters
-    rho = 1.34 # density in kg/m^3
-
-    k = (E*(h**2))/(12*rho*(1-(v**2)))
-
+    T = 1
+    mu = 1
+    ESK2 = 3.926790540455574e-06
     grads = torch.zeros_like(prediction)
-    grads[:, 0] = 1
+    grads[:, 0] = 1 #first component of the output is the actual output and ont all the derivatives w.r.t. the inputs
     d = torch.autograd.grad(prediction, sample, grad_outputs=grads,create_graph = True)[0]
     dd = torch.autograd.grad(d, sample, grad_outputs=torch.ones_like(d),create_graph = True)[0]
     ddd = torch.autograd.grad(dd, sample, grad_outputs=torch.ones_like(dd),create_graph = True)[0]
     dddd = torch.autograd.grad(ddd, sample, grad_outputs=torch.ones_like(ddd),create_graph = True)[0]
-    return dd[:, -1] + k*(dddd[:, 0] + dddd[:, 1]) - f(sample)
+    return dd[:, -1] - (T/mu)*dd[:, 0] + (ESK2/mu)*(dddd[:, 0]) - f(sample)
 
 def ic_fn_pos(prediction, sample):
     ics = torch.zeros_like(prediction[:, 0])
@@ -56,7 +51,7 @@ def ic_fn_vel(prediction, sample):
 
 
 
-batchsize = 10000
+batchsize = 10000   
 learning_rate = 1e-3 
 
 print("Building Domain Dataset")
