@@ -86,7 +86,7 @@ def create_model():
         pde,
         [ic_1, ic_2],
         num_domain=1000,
-        # num_boundary=360,
+        num_boundary=360,
         num_initial=200,
         num_test=1024,
     )
