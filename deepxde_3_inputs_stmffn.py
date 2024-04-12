@@ -5,12 +5,16 @@ import matplotlib.pyplot as plt
 import os
 from scipy.integrate import quad
 from matplotlib.animation import FuncAnimation
-import torch
+import tensorflow.compat.v1 as tf
+
+tf.disable_eager_execution()
+
+tf.reset_default_graph()
 
 
 
 epochs = 20000
-name = "pinns_3_inputs"
+name = "pinns_3_inputs_stmffn"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 
@@ -49,7 +53,7 @@ def force(sample):
     t = sample[:, -1]
 
     alpha = 8.9
-    za = - 100 * height * torch.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    za = - 100 * height * tf.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
 
@@ -143,7 +147,9 @@ def create_model():
     layer_size = [3] + [100] * 3 + [1]
     activation = "tanh"
     initializer = "Glorot uniform"
-    net = dde.nn.FNN(layer_size, activation, initializer)
+    net = dde.nn.STMsFFN(
+        layer_size, activation, initializer, sigmas_x=[1], sigmas_t=[1, 10]
+    )
 
     net.apply_output_transform(lambda x, y: x[:, 0:1] * (1 - x[:, 0:1]) * x[:, 1:2] * (1 - x[:, 1:2]) * y)
 

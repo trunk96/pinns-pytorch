@@ -10,7 +10,7 @@ import torch
 
 
 epochs = 20000
-name = "pinns_3_inputs"
+name = "pinns_2_inputs"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 
@@ -42,84 +42,35 @@ def w2(x):
 
 def force(sample):
     x = sample[:, 0]
-    y = sample[:, 1]
+    # y = sample[:, 1]
     x_f = 0.8
-    y_f = 0.8
+    # y_f = 0.8
     height = 1
     t = sample[:, -1]
 
     alpha = 8.9
-    za = - 100 * height * torch.exp(-400*((x-x_f)**2+(y-y_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    za = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
 
 def pde(x, z):
-    # rubber parameters
-    v = 0.4999 # Poisson ratio, always in [-1, 0.5], with 0.5 meaning incompressible material
-    E = 3e6 # Young's modulus in Pa
-    h = 0.01 # thinkness of the surface in meters
-    rho = 1.34 # density in kg/m^3
+    T = 1
+    mu = 1
+    ESK2 = 3.926790540455574e-06
 
-    k = (E*(h**2))/(12*rho*(1-(v**2)))
-
-    dz_tt = dde.grad.hessian(z, x, i=2, j=2)
+    dz_tt = dde.grad.hessian(z, x, i=1, j=1)
     dz_xx = dde.grad.hessian(z, x, i=0, j=0)
-    dz_yy = dde.grad.hessian(z, x, i=1, j=1)
 
     dz_xxxx = dde.grad.hessian(dz_xx, x, i=0, j=0)
-    dz_yyyy = dde.grad.hessian(dz_yy, x, i=1, j=1)
-    return dz_tt + k * (dz_xxxx+dz_yyyy) - force(x)
+    return dz_tt - (T/mu)*dz_xx + (ESK2/mu) * (dz_xxxx) - force(x)
 
 
-def plot_animation(c):
 
-    dt = 0.01  # Time step
-
-    # Generate meshgrid for x and y values
-    x_vals = np.linspace(0, 1, 100)
-    y_vals = np.linspace(0, 1, 100)
-    x, y = np.meshgrid(x_vals, y_vals)
-    t_values = np.arange(0, 1, dt)
-
-    p = np.zeros((len(x_vals), len(y_vals), len(t_values)))
-
-    # Set initial condition
-    XX = np.vstack((x.flatten(), y.flatten(), np.zeros_like(x.flatten()))).T
-    p[:, :, 0] = c.predict(XX).reshape(len(x_vals), len(y_vals))
-
-    # Update function using predicted solution
-    def update(frame):
-        t = t_values[frame]
-        XX = np.vstack((x.flatten(), y.flatten(), np.full_like(x.flatten(), t))).T
-
-        p[:, :, frame] = c.predict(XX).reshape(len(x_vals), len(y_vals))
-
-        ax.clear()
-        ax.set_xlabel('X-axis')
-        ax.set_ylabel('Y-axis')
-        ax.set_zlabel('Deformation (Z-axis)')
-        ax.set_title(f'Membrane Deformation at t={t:.2f}')
-
-        # Plot the 3D surface without colormap
-        surf = ax.plot_surface(x, y, p[:, :, frame], rstride=1, cstride=1, alpha=0.8, antialiased=True)
-
-        # Set fixed z-axis limits
-        ax.set_zlim(-1, 1)
-        return surf,
-
-    # Create the animation
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    ani = FuncAnimation(fig, update, frames=len(t_values), interval=1.0, blit=True)
-
-    # Save the animation as a GIF file
-    ani.save(f"{output_dir}/animation.gif", writer='imagemagick')
 
 
 def create_model():
 
-    geom = dde.geometry.Rectangle([0, 0], [1, 1])
+    geom = dde.geometry.Interval(0, 1)
     timedomain = dde.geometry.TimeDomain(0, 1)
     geomtime = dde.geometry.GeometryXTime(geom, timedomain)
 
@@ -127,8 +78,8 @@ def create_model():
 
     ic_2 = dde.icbc.OperatorBC(
         geomtime,
-        lambda x, y, _: dde.grad.jacobian(y, x, i=0, j=2) - func2(x),
-        lambda x, _: np.isclose(x[2], 0),
+        lambda x, y, _: dde.grad.jacobian(y, x, i=0, j=1) - func2(x),
+        lambda x, _: np.isclose(x[1], 0),
     )
     data = dde.data.TimePDE(
         geomtime,
@@ -140,12 +91,12 @@ def create_model():
         num_test=1024,
     )
 
-    layer_size = [3] + [100] * 3 + [1]
+    layer_size = [2] + [100] * 3 + [1]
     activation = "tanh"
     initializer = "Glorot uniform"
     net = dde.nn.FNN(layer_size, activation, initializer)
 
-    net.apply_output_transform(lambda x, y: x[:, 0:1] * (1 - x[:, 0:1]) * x[:, 1:2] * (1 - x[:, 1:2]) * y)
+    net.apply_output_transform(lambda x, y: x[:, 0:1] * (1 - x[:, 0:1]) * y)
 
     model = dde.Model(data, net)
 
@@ -217,5 +168,37 @@ def load_model(path):
 if __name__ == "__main__":
     a = create_model()
     b = train(a)
-    # b = restore_model(a, name)
-    plot_animation(b)
+    fig, axes = plt.subplots(1, 1, figsize=(15, 5))
+    x = np.linspace(0, 1, num=100)
+    t = np.linspace(0, 1, num=100)
+    xx, tt = np.meshgrid(x, t)
+    X = np.vstack((np.ravel(xx), np.ravel(tt))).T
+
+    Xp = torch.Tensor(X)#.to(torch.device('cuda:0')).requires_grad_()
+    ppred = b.predict(Xp)
+
+    #ppred = ppred[:, 0].cpu().detach().numpy()
+
+    la = len(np.unique(X[:, 0:1]))
+    le = len(np.unique(X[:, 1:]))
+
+    #pred = ppred.reshape((le, la)).cpu()
+    pred = ppred.reshape((le, la))
+
+
+    # Plot Theta Predicted
+    im1 = axes.imshow(pred, cmap='inferno', aspect='auto', origin='lower',
+                            extent=[np.unique(X[:, 0:1]).min(), np.unique(X[:, 0:1]).max(), np.unique(X[:, 1:]).min(), np.unique(X[:, 1:]).max()])#, vmin=true.min(), vmax = true.max())
+    axes.set_title(f'Predicted')
+    axes.set_xlabel('X')
+    axes.set_ylabel('T')
+    plt.colorbar(im1, ax=axes)
+
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig(f'{output_dir}/plot_{name}.png')
+
+    plt.show()
