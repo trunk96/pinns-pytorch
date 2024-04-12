@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
 
+all_train_losses = []
 train_losses = []  # To store losses
 test_losses = []
 current_file = os.getcwd()
@@ -28,6 +29,7 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
     with open(file_path, "w") as log_file:
         for epoch in range(epochs):
             model.train(True)
+            l = []
             for batch_idx, (x_in) in enumerate(dataloader):          
                 (x_ic) = next(iter(ic_dataloader))
                 #print(f"{x_in}, {x_ic}")
@@ -53,8 +55,8 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                         epoch, batch_idx, int(len(dataloader.dataset)/batchsize),
                         100. * batch_idx / len(dataloader), loss.item()))
                     
-                train_losses.append(loss.item())  # Storing the loss
-            
+                all_train_losses.append(loss.item())  # Storing the loss
+                l.append(loss.item())
             if validationdatasets != None and len(validationdatasets) == 2:
                 model.eval()
                 validation_losses = []
@@ -76,18 +78,22 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
             if epoch % 20 == 0:
                 epoch_path = os.path.join(model_dir, f"{name}_{epoch}.pt")
                 torch.save(model, epoch_path)
+            
+            train_losses.append(np.average(l))
                 
     # Save the model
     torch.save(model, model_path)
     
-    plt.plot(train_losses)
+    plt.plot(all_train_losses)
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
     plt.title('Training Loss')
     plt.savefig(f'{output_dir}/training_loss_{name}.png')
+    plt.clf()
+    plt.plot(train_losses)
     plt.plot(test_losses)
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
-    plt.title('Training Loss')
+    plt.title('Training and Validation Loss')
     plt.savefig(f'{output_dir}/test_loss_{name}.png')
     plt.show()
