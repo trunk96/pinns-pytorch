@@ -16,12 +16,12 @@ def hard_constraint(x, y):
 
 def f(sample):
     x = sample[:, 0]
-    y = sample[:, 1]
+    #y = sample[:, 1]
     """ x_f = sample[:, 2]
     y_f = sample[:, 3]
     height = sample[:, 4] """
     x_f = 0.8
-    y_f = 0.8
+    #y_f = 0.8
     height = 1
     t = sample[:, -1]
 

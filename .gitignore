@@ -194,5 +194,5 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
 
-output
+output*
 pinns_3_inputs/

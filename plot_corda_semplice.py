@@ -1,13 +1,13 @@
 from scipy.integrate import quad
 import matplotlib.pyplot as plt
 import os
-from model import PINN
+from pinns.model import PINN
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from train import train
-from dataset import DomainDataset, ICDataset
+from pinns.train import train
+from pinns.dataset import DomainDataset, ICDataset
 
 name = "output"
 current_file = os.path.abspath(__file__)
@@ -17,7 +17,7 @@ model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-model_path = os.path.join(model_dir, 'corda_semplice.pt')
+model_path = os.path.join(model_dir, 'main.pt')
 
 a = 1
 
@@ -43,7 +43,7 @@ def hard_constraint(x, y):
     return res
 
 
-batchsize = 32
+batchsize = 1000
 learning_rate = 1e-3 
 
 domainDataset = DomainDataset([0.0]*2, [1.0]*2, 1000)
@@ -58,10 +58,12 @@ t = np.linspace(0, 1, num=100)
 xx, tt = np.meshgrid(x, t)
 X = np.vstack((np.ravel(xx), np.ravel(tt))).T
 
-Xp = torch.Tensor(X).to(torch.device('cuda:0'))
+Xp = torch.Tensor(X).to(torch.device('cuda:0')).requires_grad_()
 # Xp = X
 ttrue = exact(X)
 ppred = model(Xp)
+
+ppred = ppred[:, 0].cpu().detach().numpy()
 
 la = len(np.unique(X[:, 0:1]))
 le = len(np.unique(X[:, 1:]))
