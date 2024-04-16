@@ -1,13 +1,13 @@
 from scipy.integrate import quad
 import matplotlib.pyplot as plt
 import os
-from model import PINN
+from pinns.model import PINN
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from train import train
-from dataset import DomainDataset, ICDataset
+from pinns.train import train
+from pinns.dataset import DomainDataset, ICDataset
 
 name = "output"
 current_file = os.path.abspath(__file__)

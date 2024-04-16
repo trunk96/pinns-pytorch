@@ -34,8 +34,8 @@ class PINN(nn.Module):
         output = self.layers(x)
         if self.hard_constraint_fn != None:
             output = self.hard_constraint_fn(x, output)
-        d = torch.autograd.grad(output, x, grad_outputs=torch.ones_like(output), only_inputs=True, create_graph=True)[0]
-        output = torch.hstack((output, d))
+        #d = torch.autograd.grad(output, x, grad_outputs=torch.ones_like(output), only_inputs=True, create_graph=True)[0]
+        #output = torch.hstack((output, d))
         return output
 	
 					
