@@ -13,7 +13,7 @@ num_inputs = 2 #x, t
 
 
 def hard_constraint(x, y):
-    return x[:, 0:1] * (1 - x[:, 0:1]) * y
+    return x[:, 0] * (1 - x[:, 0]) * y
 
 def f(sample):
     x = sample[:, 0]
@@ -47,7 +47,8 @@ def ic_fn_pos(prediction, sample):
 
 def ic_fn_vel(prediction, sample):
     ics = torch.zeros_like(prediction[:, -1])
-    return prediction[:, -1], ics
+    dt = jacobian(prediction, sample, i=1, j=1)
+    return dt, ics
 
 
 
@@ -57,7 +58,7 @@ learning_rate = 1e-3
 print("Building Domain Dataset")
 domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 100000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 20000, period = 3)
+icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 100000, period = 3)
 print("Building Validation Dataset")
 validationDataset = ValidationDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize)
 print("Building Validation IC Dataset")
