@@ -46,7 +46,7 @@ def ic_fn_pos(prediction, sample):
     return prediction[:, 0], ics
 
 def ic_fn_vel(prediction, sample):
-    ics = torch.zeros_like(prediction[:, -1])
+    ics = torch.zeros_like(prediction[:, 0])
     dt = jacobian(prediction, sample, i=1, j=1)
     return dt, ics
 
