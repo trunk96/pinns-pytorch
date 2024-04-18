@@ -57,6 +57,8 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                     
                 all_train_losses.append(loss.item())  # Storing the loss
                 l.append(loss.item())
+
+            torch.cuda.empty_cache()
             if validationdatasets != None and len(validationdatasets) == 2:
                 model.eval()
                 validation_losses = []
@@ -80,6 +82,7 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                 torch.save(model, epoch_path)
             
             train_losses.append(np.average(l))
+            torch.cuda.empty_cache()
                 
     # Save the model
     torch.save(model, model_path)

@@ -34,9 +34,10 @@ def f(sample):
 def pde_fn(prediction, sample):
     T = 1
     mu = 1
-    d = jacobian(prediction, sample)
-    ddx = jacobian(d, sample, i = 0, j = 0)
-    ddt = jacobian(d, sample, i = 1, j = 1)
+    dx = jacobian(prediction, sample, i=0, j=0)
+    dt = jacobian(prediction, sample, i=1, j=1)
+    ddx = jacobian(dx, sample, i = 0, j = 0)
+    ddt = jacobian(dt, sample, i = 1, j = 1)
     return ddt - (T/mu)*ddx
 
 
