@@ -17,7 +17,7 @@ if not os.path.exists(model_dir):
 
 
 
-def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset, validationdatasets = None):
+def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset, scheduler = None, validationdatasets = None):
     model_path = os.path.join(model_dir, f"{name}.pt")
     file_path = f"{output_dir}/train_{name}.txt"
     dataloader = DataLoader(domaindataset, batch_size=batchsize,shuffle=True,num_workers = 0,drop_last = False)
@@ -81,6 +81,8 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                 epoch_path = os.path.join(model_dir, f"{name}_{epoch}.pt")
                 torch.save(model, epoch_path)
             
+            if scheduler != None:
+                scheduler.step()
             train_losses.append(np.average(l))
             torch.cuda.empty_cache()
                 

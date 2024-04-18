@@ -54,7 +54,7 @@ def ic_fn_vel(prediction, sample):
 
 
 batchsize = 10000 
-learning_rate = 1e-3 
+learning_rate = 1e-5 
 
 print("Building Domain Dataset")
 domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 100000, period = 3)
@@ -73,7 +73,8 @@ def init_normal(m):
 
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
-train("main", model, epochs, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset, validationdatasets = (validationDataset, validationicDataset))
+train("main", model, epochs, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset, scheduler = scheduler, validationdatasets = (validationDataset, validationicDataset))
