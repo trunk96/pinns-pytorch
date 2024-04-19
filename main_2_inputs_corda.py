@@ -74,7 +74,8 @@ def init_normal(m):
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+#scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {

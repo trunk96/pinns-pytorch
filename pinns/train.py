@@ -114,7 +114,7 @@ def train(data):
                 torch.save(model, epoch_path)
             
             if scheduler != None:
-                scheduler.step()
+                scheduler.step(test_losses[-1])
             train_losses.append(np.average(l))
             torch.cuda.empty_cache()
     
