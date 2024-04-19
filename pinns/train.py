@@ -31,10 +31,10 @@ def train(data):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
-    model_path = os.path.join(model_dir, f"{name}.pt")
-    file_path = f"{output_dir}/train_{name}.txt"
+    model_path = os.path.join(model_dir, f"model.pt")
+    file_path = f"{output_dir}/train.txt"
 
-    params_path = f"{output_dir}/params_{name}.json"
+    params_path = f"{output_dir}/params.json"
     params = {
         "name": name,
         "model": str(model),
@@ -47,7 +47,7 @@ def train(data):
         "validationDomainDataset": str(validationdomaindataset),
         "validationICDataset": str(validationicdataset)
     } 
-    fp = open(params_path, "w") 
+    fp = open(params_path, "w", newline='\r\n') 
     json.dump(params, fp)
     fp.close()  
 
@@ -110,7 +110,7 @@ def train(data):
                 test_losses.append(np.average(validation_losses))
                     
             if epoch % 20 == 0:
-                epoch_path = os.path.join(model_dir, f"{name}_{epoch}.pt")
+                epoch_path = os.path.join(model_dir, f"model_{epoch}.pt")
                 torch.save(model, epoch_path)
             
             if scheduler != None:
@@ -125,12 +125,12 @@ def train(data):
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
     plt.title('Training Loss')
-    plt.savefig(f'{output_dir}/training_loss_{name}.png')
+    plt.savefig(f'{output_dir}/training_loss.png')
     plt.clf()
     plt.plot(train_losses)
     plt.plot(test_losses)
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
     plt.title('Training and Validation Loss')
-    plt.savefig(f'{output_dir}/test_loss_{name}.png')
+    plt.savefig(f'{output_dir}/test_loss.png')
     plt.show()
