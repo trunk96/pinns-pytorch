@@ -74,7 +74,22 @@ def init_normal(m):
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
-train("main", model, epochs, batchsize, optimizer, pde_fn, [ic_fn_pos, ic_fn_vel], domainDataset, icDataset, scheduler = scheduler, validationdatasets = (validationDataset, validationicDataset))
+data = {
+    "name": "string_2inputs_nostiffness_icsin_icv0",
+    "model": model,
+    "epochs": epochs,
+    "batchsize": batchsize,
+    "optimizer": optimizer,
+    "scheduler": scheduler,
+    "pde_fn": pde_fn,
+    "ic_fns": (ic_fn_pos, ic_fn_vel),
+    "domain_dataset": domainDataset,
+    "ic_dataset": icDataset,
+    "validation_domain_dataset": validationDataset,
+    "validation_ic_dataset": validationicDataset
+}
+
+train(data)

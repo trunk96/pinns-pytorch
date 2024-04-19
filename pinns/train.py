@@ -9,13 +9,6 @@ import json
 all_train_losses = []
 train_losses = []  # To store losses
 test_losses = []
-current_file = os.getcwd()
-output_dir = os.path.join(current_file, "output")
-
-model_dir = os.path.join(output_dir, "model")
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
-
 
 
 def train(data):  
@@ -31,6 +24,12 @@ def train(data):
     icdataset = data.get("ic_dataset")
     validationdomaindataset = data.get("validation_domain_dataset")
     validationicdataset = data.get("validation_ic_dataset")
+
+    current_file = os.getcwd()
+    output_dir = os.path.join(current_file, "output", name)
+    model_dir = os.path.join(output_dir, "model")
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
 
     model_path = os.path.join(model_dir, f"{name}.pt")
     file_path = f"{output_dir}/train_{name}.txt"
