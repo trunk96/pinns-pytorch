@@ -27,9 +27,19 @@ def train(data):
 
     current_file = os.getcwd()
     output_dir = os.path.join(current_file, "output", name)
-    model_dir = os.path.join(output_dir, "model")
-    if not os.path.exists(model_dir):
-        os.makedirs(model_dir)
+    
+    if os.path.exists(output_dir):
+        counter = 1
+        while True:
+            output_dir = os.path.join(current_file, "output", name+"_"+str(counter))
+            if not os.path.exists(output_dir):
+                break
+            else:
+                counter +=1
+        model_dir = os.path.join(output_dir, "model")
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+        
 
     model_path = os.path.join(model_dir, f"model.pt")
     file_path = f"{output_dir}/train.txt"
