@@ -4,6 +4,7 @@ from pinns.loss import residual_loss, ic_loss
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
+import json
 
 all_train_losses = []
 train_losses = []  # To store losses
@@ -17,14 +18,46 @@ if not os.path.exists(model_dir):
 
 
 
-def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindataset, icdataset, scheduler = None, validationdatasets = None):
+def train(data):  
+    name = data.get("name", "main")
+    model = data.get("model")
+    epochs = data.get("epochs")
+    batchsize = data.get("batchsize")
+    optimizer = data.get("optimizer")
+    scheduler = data.get("scheduler")
+    pde_fn = data.get("pde_fn")
+    ic_fns = data.get("ic_fns")
+    domaindataset = data.get("domain_dataset")
+    icdataset = data.get("ic_dataset")
+    validationdomaindataset = data.get("validation_domain_dataset")
+    validationicdataset = data.get("validation_ic_dataset")
+
     model_path = os.path.join(model_dir, f"{name}.pt")
     file_path = f"{output_dir}/train_{name}.txt"
+
+    params_path = f"{output_dir}/params_{name}.json"
+    params = {
+        "name": name,
+        "model": str(model),
+        "epochs": epochs,
+        "batchsize": batchsize,
+        "optimizer": str(optimizer),
+        "scheduler": str(scheduler),
+        "domainDataset": str(domaindataset),
+        "icDataset": str(icdataset),
+        "validationDomainDataset": str(validationdomaindataset),
+        "validationICDataset": str(validationicdataset)
+    } 
+    fp = open(params_path, "w") 
+    json.dump(params, fp)
+    fp.close()  
+
     dataloader = DataLoader(domaindataset, batch_size=batchsize,shuffle=True,num_workers = 0,drop_last = False)
     ic_dataloader = DataLoader(icdataset, batch_size=batchsize, shuffle=True, num_workers = 0, drop_last = False)
-    if validationdatasets != None and len(validationdatasets) == 2:
-        validation_dataloader = DataLoader(validationdatasets[0], batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
-        validation_ic_dataloader = DataLoader(validationdatasets[1], batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
+    if validationicdataset != None and validationdomaindataset != None:
+        validation_dataloader = DataLoader(validationdomaindataset, batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
+        validation_ic_dataloader = DataLoader(validationicdataset, batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
+
     # Open the log file for writing
     with open(file_path, "w") as log_file:
         for epoch in range(epochs):
@@ -59,7 +92,7 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                 l.append(loss.item())
 
             torch.cuda.empty_cache()
-            if validationdatasets != None and len(validationdatasets) == 2:
+            if validationicdataset != None and validationdomaindataset != None:
                 model.eval()
                 validation_losses = []
                 for batch_idx, (x_in) in enumerate(validation_dataloader):
@@ -85,7 +118,7 @@ def train(name, model, epochs, batchsize, optimizer, pde_fn, ic_fns, domaindatas
                 scheduler.step()
             train_losses.append(np.average(l))
             torch.cuda.empty_cache()
-                
+    
     # Save the model
     torch.save(model, model_path)
     

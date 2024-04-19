@@ -52,7 +52,11 @@ class DomainDataset(Dataset):
             xi.append(s)
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
         return
-
+    
+    def __str__(self):
+        s = f"DomainDataset({self.xmin}, {self.xmax}, n={self.n}, rand={self.rand}, shuffle={self.shuffle}, period={self.period})"
+        return s
+    
     def _compute_items(self):    
         dx = (self.volume / self.n) ** (1 / self.dim)
         xi = []
@@ -92,6 +96,10 @@ class ICDataset(DomainDataset):
         xi.append([0.0])
         self.x = np.array(list(itertools.product(*xi)), dtype = "f")
         return
+    
+    def __str__(self):
+        s = f"ICDataset({self.xmin}, {self.xmax}, n={self.n}, rand={self.rand}, shuffle={self.shuffle}, period={self.period})"
+        return s
     
     def _compute_items(self):
         dx = (self.volume / self.n) ** (1 / self.dim)
@@ -133,6 +141,10 @@ class ValidationDataset(DomainDataset):
         self.x = np.array(xi[:, 1:], dtype="f")
         return
     
+    def __str__(self):
+        s = f"ValidationDataset({self.xmin}, {self.xmax}, n={self.n}, rand={self.rand}, shuffle={self.shuffle}, period={self.period})"
+        return s
+    
 class ValidationICDataset(DomainDataset):
     def __init__(self, xmin, xmax, n, rand=True, shuffle=False, period=1):
         super().__init__(xmin, xmax, n, rand, shuffle, period)
@@ -158,6 +170,10 @@ class ValidationICDataset(DomainDataset):
         xi = np.hstack((xi, z))
         self.x = np.array(xi[:, 1:], dtype="f")
         return
+    
+    def __str__(self):
+        s = f"ValidationICDataset({self.xmin}, {self.xmax}, n={self.n}, rand={self.rand}, shuffle={self.shuffle}, period={self.period})"
+        return s
 
 
 class BCDataset(DomainDataset):
