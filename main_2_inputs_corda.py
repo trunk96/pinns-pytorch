@@ -13,7 +13,7 @@ num_inputs = 2 #x, t
 
 
 def hard_constraint(x, y):
-    return x[:, 0] * (1 - x[:, 0]) * y
+    return x[:, 0] * (1 - x[:, 0]) * y * x[:,-1]
 
 def f(sample):
     x = sample[:, 0]
@@ -86,7 +86,7 @@ data = {
     "optimizer": optimizer,
     "scheduler": scheduler,
     "pde_fn": pde_fn,
-    "ic_fns": (ic_fn_pos, ic_fn_vel),
+    "ic_fns": (ic_fn_vel),
     "domain_dataset": domainDataset,
     "ic_dataset": icDataset,
     "validation_domain_dataset": validationDataset,

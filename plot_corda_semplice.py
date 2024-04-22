@@ -10,14 +10,16 @@ from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
 
 name = "output"
+experiment_name = "string_2inputs_nostiffness_icsin_icv0_1"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
+output_dir = os.path.join(output_dir, experiment_name)
 
 model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-model_path = os.path.join(model_dir, 'main.pt')
+model_path = os.path.join(model_dir, 'model.pt')
 
 a = 1
 
