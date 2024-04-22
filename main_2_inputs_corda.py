@@ -34,10 +34,10 @@ def f(sample):
 def pde_fn(prediction, sample):
     T = 1
     mu = 1
-    dx = jacobian(prediction, sample, i=0, j=0)
-    dt = jacobian(prediction, sample, i=1, j=1)
-    ddx = jacobian(dx, sample, i = 0, j = 0)
-    ddt = jacobian(dt, sample, i = 1, j = 1)
+    dx = jacobian(prediction, sample, j=0)
+    dt = jacobian(prediction, sample, j=1)
+    ddx = jacobian(dx, sample, j = 0)
+    ddt = jacobian(dt, sample, j = 1)
     return ddt - (T/mu)*ddx
 
 
@@ -47,7 +47,7 @@ def ic_fn_pos(prediction, sample):
     return prediction[:, 0], ics
 
 def ic_fn_vel(prediction, sample):
-    dt = jacobian(prediction, sample, i=1, j=1)
+    dt = jacobian(prediction, sample, j=1)
     ics = torch.zeros_like(dt)
     return dt, ics
 
@@ -79,14 +79,14 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_2inputs_nostiffness_icsin_icv0",
+    "name": "string_2inputs_nostiffness_ic0hard_icv0",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,
     "optimizer": optimizer,
     "scheduler": scheduler,
     "pde_fn": pde_fn,
-    "ic_fns": (ic_fn_vel),
+    "ic_fns": [ic_fn_vel],
     "domain_dataset": domainDataset,
     "ic_dataset": icDataset,
     "validation_domain_dataset": validationDataset,
