@@ -13,7 +13,7 @@ num_inputs = 2 #x, t
 
 
 def hard_constraint(x, y):
-    return x[:, 0] * (1 - x[:, 0]) * y * x[:,-1]
+    return x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y
 
 def f(sample):
     x = sample[:, 0]
@@ -32,12 +32,18 @@ def f(sample):
 
 
 def pde_fn(prediction, sample):
+    print(f"PREDICTION: {prediction}")
+    print(f"SAMPLE: {sample}")
     T = 1
     mu = 1
     dx = jacobian(prediction, sample, j=0)
+    print(f"DX: {dx}")
     dt = jacobian(prediction, sample, j=1)
+    print(f"DT: {dt}")
     ddx = jacobian(dx, sample, j = 0)
+    print(f"DDX: {ddx}")
     ddt = jacobian(dt, sample, j = 1)
+    print(f"DDT: {ddt}")
     return ddt - (T/mu)*ddx
 
 
@@ -53,7 +59,7 @@ def ic_fn_vel(prediction, sample):
 
 
 
-batchsize = 10000 
+batchsize = 10
 learning_rate = 1e-5 
 
 print("Building Domain Dataset")
