@@ -36,9 +36,10 @@ def train(data):
                 break
             else:
                 counter +=1
-        model_dir = os.path.join(output_dir, "model")
-        if not os.path.exists(model_dir):
-            os.makedirs(model_dir)
+                
+    model_dir = os.path.join(output_dir, "model")
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
         
 
     model_path = os.path.join(model_dir, f"model.pt")
