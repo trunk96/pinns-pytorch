@@ -20,7 +20,7 @@ def jacobian(output, input, i=None, j=None, create_graph=True):
         if j == None:
             return d
         else:
-            return d[:, j]
+            return d[..., j]
     else:
         g = torch.zeros_like(output)
         g[..., i] = 1
@@ -28,7 +28,7 @@ def jacobian(output, input, i=None, j=None, create_graph=True):
         if j == None:
             return d
         else:
-            return d[:, j]
+            return d[..., j]
 
 
 
