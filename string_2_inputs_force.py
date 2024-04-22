@@ -24,7 +24,7 @@ def f(sample):
     x_f = 0.8
     #y_f = 0.8
     height = 1
-    t = sample[:, -1].rehsape(-1, 1)
+    t = sample[:, -1].reshape(-1, 1)
 
     alpha = 8.9
     za = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
