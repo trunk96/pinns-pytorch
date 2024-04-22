@@ -32,18 +32,12 @@ def f(sample):
 
 
 def pde_fn(prediction, sample):
-    print(f"PREDICTION: {prediction}")
-    print(f"SAMPLE: {sample}")
     T = 1
     mu = 1
     dx = jacobian(prediction, sample, j=0)
-    print(f"DX: {dx}")
     dt = jacobian(prediction, sample, j=1)
-    print(f"DT: {dt}")
     ddx = jacobian(dx, sample, j = 0)
-    print(f"DDX: {ddx}")
     ddt = jacobian(dt, sample, j = 1)
-    print(f"DDT: {ddt}")
     return ddt - (T/mu)*ddx
 
 
