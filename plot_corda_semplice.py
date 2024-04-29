@@ -10,7 +10,7 @@ from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
 
 name = "output"
-experiment_name = "string_2inputs_nostiffness_ic0hard_icvsin_1"
+experiment_name = "string_2inputs_nostiffness_force_ic0hard_icv0"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)

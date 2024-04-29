@@ -9,16 +9,17 @@ import numpy as np
 from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
 
-name = "output_corda_stiffness_4_inputs"
+name = "output"
+experiment_name = "string_4inputs_nostiffness_force_ic0hard_icv0_3"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
+output_dir = os.path.join(output_dir, experiment_name)
 
 model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-#model1_path = os.path.join(model_dir, 'corda_semplice.pt')
-model_path = os.path.join(model_dir, 'main_980.pt')
+model_path = os.path.join(model_dir, 'model_800.pt')
 
 num_inputs = 4 #x,
 
@@ -56,8 +57,8 @@ fig, axes = plt.subplots(1, 1, figsize=(15, 5))
 
 tt = np.linspace(0, 1, num=1000)
 x = np.linspace(0, 1, num=1000).reshape(-1, 1)
-x_f = 0.8
-f = 0.9
+x_f = 0.2
+f = 1.0
 preds = []
 for t in tt:     
     X = compose_input(x, x_f, f, t)
