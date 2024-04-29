@@ -52,7 +52,7 @@ def train(data):
         "epochs": epochs,
         "batchsize": batchsize,
         "optimizer": str(optimizer),
-        "scheduler": str(scheduler.state_dict()),
+        "scheduler": str(scheduler.state_dict()) if scheduler!=None else "None",
         "domainDataset": str(domaindataset),
         "icDataset": str(icdataset),
         "validationDomainDataset": str(validationdomaindataset),
