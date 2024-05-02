@@ -85,7 +85,7 @@ def train(data):
                 x_ic = torch.Tensor(x_ic).to(torch.device('cuda:0'))
                 loss_eqn = residual_loss(x_in, model, pde_fn)
                 loss = loss_eqn
-                residual_losses.append(loss_eqn)
+                residual_losses.append(loss_eqn.item())
                 for i in range(len(ic_fns)):
                     loss_ic = ic_loss(x_ic, model, ic_fns[i])
                     loss += loss_ic
