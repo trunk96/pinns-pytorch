@@ -22,18 +22,21 @@ def f(sample):
     t = sample[:, -1].reshape(-1, 1)
 
     alpha = 8.9
-    za = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    za = -1* height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
 
 def pde_fn(prediction, sample):
+    u_min = -0.1
+    u_max = 0.1
+    delta = u_max - u_min
     T = 1
     mu = 1
     dx = jacobian(prediction, sample, j=0)
     dt = jacobian(prediction, sample, j=1)
     ddx = jacobian(dx, sample, j = 0)
     ddt = jacobian(dt, sample, j = 1)
-    return ddt - (T/mu)*ddx - f(sample)
+    return delta * ddt - delta*(T/mu)*ddx - f(sample)
 
 
 def ic_fn_vel(prediction, sample):
@@ -63,7 +66,7 @@ def init_normal(m):
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20)
 #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 

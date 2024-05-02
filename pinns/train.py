@@ -11,6 +11,8 @@ train_losses = []  # To store losses
 test_losses = []
 
 
+
+
 def train(data):  
     name = data.get("name", "main")
     model = data.get("model")
@@ -68,6 +70,9 @@ def train(data):
         validation_dataloader = DataLoader(validationdomaindataset, batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
         validation_ic_dataloader = DataLoader(validationicdataset, batch_size=batchsize, shuffle=False, num_workers = 0, drop_last = False)
 
+    residual_losses = []
+    ic_losses = [[] for i in range(len(ic_fns))]
+
     # Open the log file for writing
     with open(file_path, "w") as log_file:
         for epoch in range(epochs):
@@ -80,9 +85,11 @@ def train(data):
                 x_ic = torch.Tensor(x_ic).to(torch.device('cuda:0'))
                 loss_eqn = residual_loss(x_in, model, pde_fn)
                 loss = loss_eqn
+                residual_losses.append(loss_eqn)
                 for i in range(len(ic_fns)):
                     loss_ic = ic_loss(x_ic, model, ic_fns[i])
                     loss += loss_ic
+                    ic_losses[i].append(loss_ic)
                 #loss.requires_grad = True
                 optimizer.zero_grad()
                 loss.backward()
@@ -144,4 +151,15 @@ def train(data):
     plt.ylabel('Loss')
     plt.title('Training and Validation Loss')
     plt.savefig(f'{output_dir}/test_loss.png')
+    plt.clf()
+    label = ["Residual loss"]
+    plt.plot(residual_losses)
+    for i in range(len(ic_fns)):
+        plt.plot(ic_losses[i])
+        label.append("IC_loss_"*str(i))
+    plt.legend(label)
+    plt.xlabel('Iterations')
+    plt.ylabel('Loss')
+    plt.title('Training Losses')
+    plt.savefig(f'{output_dir}/train_losses.png')
     plt.show()
