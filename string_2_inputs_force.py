@@ -46,7 +46,7 @@ def pde_fn(prediction, sample):
     dt = jacobian(prediction, sample, j=1)
     ddx = jacobian(dx, sample, j = 0)
     ddt = jacobian(dt, sample, j = 1)
-    return (delta_u/(t_f**2)) * ddt - (delta_u/(delta_x**2))*(T/mu)*ddx - f(sample)
+    return (delta_u/(t_f**2)) * ddt - (delta_u/(delta_x**2))*(T/mu)*ddx - f(sample)*delta_f - f_min
 
 
 def ic_fn_vel(prediction, sample):

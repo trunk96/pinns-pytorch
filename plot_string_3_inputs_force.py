@@ -10,7 +10,7 @@ from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
 
 name = "output"
-experiment_name = "string_adim_3inputs_nostiffness_force_ic0hard_icv0"
+experiment_name = "string_adim-all_3inputs_nostiffness_force_ic0hard_icv0"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -19,13 +19,25 @@ model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-model_path = os.path.join(model_dir, 'model_660.pt')
+model_path = os.path.join(model_dir, 'model.pt')
 
-num_inputs = 4 #x,
+num_inputs = 3 #x, x_f, t
 
+u_min = -0.4
+u_max = 0.4
+x_min = 0.0
+x_max = 1.0
+t_f = 1.0
+f_min = -3.0
+f_max = 0.0
+delta_u = u_max - u_min
+delta_x = x_max - x_min
+delta_f = f_max - f_min
 
 def hard_constraint(x, y):
-    return x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
+    res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
+    res = (res - u_min)/delta_u
+    return res
 
 def w1(x):
     return 0
@@ -40,9 +52,9 @@ def exact(x):
     return (w1(x-a*t) + w1(x+a*t))/2
 
 def compose_input(x, x_f, t):
-    X = x
+    X = (x-x_min)/delta_x
     X = np.hstack((X, np.ones_like(x)*x_f))
-    X = np.hstack((X, np.ones_like(x)*t))
+    X = np.hstack((X, np.ones_like(x)*(t/t_f)))
     X = torch.Tensor(X).to(torch.device("cuda:0")).requires_grad_()
     return X
 
@@ -52,11 +64,9 @@ model = torch.load(model_path)
 
 fig, axes = plt.subplots(1, 1, figsize=(15, 5))
 
-tt = np.linspace(0, 1, num=1000)
-x = np.linspace(0, 1, num=1000).reshape(-1, 1)
+tt = np.linspace(0, t_f, num=1000)
+x = np.linspace(x_min, x_max, num=1000).reshape(-1, 1)
 x_f = 0.5
-u_min = -0.1
-u_max = 0.1
 delta = u_max - u_min
 preds = []
 for t in tt:     
