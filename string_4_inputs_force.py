@@ -25,11 +25,11 @@ def f(sample):
     za = -1* height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
+u_min = -0.1
+u_max = 0.1
+delta = u_max - u_min
 
 def pde_fn(prediction, sample):
-    u_min = -0.1
-    u_max = 0.1
-    delta = u_max - u_min
     T = 1
     mu = 1
     dx = jacobian(prediction, sample, j=0)
@@ -40,7 +40,7 @@ def pde_fn(prediction, sample):
 
 
 def ic_fn_vel(prediction, sample):
-    dt = jacobian(prediction, sample, j=1)
+    dt = jacobian(prediction, sample, j=1)/delta
     ics = torch.zeros_like(dt)
     return dt, ics
 

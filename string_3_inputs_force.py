@@ -22,9 +22,13 @@ def f(sample):
     t = sample[:, -1].reshape(-1, 1)
 
     alpha = 8.9
-    za = -10 * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    za = -1 * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return za
 
+
+u_min = -0.1
+u_max = 0.1
+delta = u_max - u_min
 
 def pde_fn(prediction, sample):
     T = 1
@@ -33,11 +37,11 @@ def pde_fn(prediction, sample):
     dt = jacobian(prediction, sample, j=1)
     ddx = jacobian(dx, sample, j = 0)
     ddt = jacobian(dt, sample, j = 1)
-    return ddt - (T/mu)*ddx - f(sample)
+    return delta * ddt - delta*(T/mu)*ddx - f(sample)
 
 
 def ic_fn_vel(prediction, sample):
-    dt = jacobian(prediction, sample, j=1)
+    dt = jacobian(prediction, sample, j=1)/delta
     ics = torch.zeros_like(dt)
     return dt, ics
 
