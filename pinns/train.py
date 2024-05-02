@@ -156,7 +156,7 @@ def train(data):
     plt.plot(residual_losses)
     for i in range(len(ic_fns)):
         plt.plot(ic_losses[i])
-        label.append("IC_loss_"*str(i))
+        label.append("IC_loss_"+str(i))
     plt.legend(label)
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
