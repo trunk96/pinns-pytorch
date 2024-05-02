@@ -11,9 +11,21 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 epochs = 1000
 num_inputs = 4 #x, x_f, f, t
 
+u_min = -0.4
+u_max = 0.4
+x_min = 0.0
+x_max = 1.0
+t_f = 1.0
+f_min = -3.0
+f_max = 0.0
+delta_u = u_max - u_min
+delta_x = x_max - x_min
+delta_f = f_max - f_min
 
 def hard_constraint(x, y):
-    return x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
+    res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
+    res = (res - u_min)/delta_u
+    return res
 
 def f(sample):
     x = sample[:, 0].reshape(-1, 1)
@@ -22,12 +34,9 @@ def f(sample):
     t = sample[:, -1].reshape(-1, 1)
 
     alpha = 8.9
-    za = -1* height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
-    return za
+    z = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    return (z-f_min)/delta_f
 
-u_min = -0.1
-u_max = 0.1
-delta = u_max - u_min
 
 def pde_fn(prediction, sample):
     T = 1
@@ -36,11 +45,11 @@ def pde_fn(prediction, sample):
     dt = jacobian(prediction, sample, j=1)
     ddx = jacobian(dx, sample, j = 0)
     ddt = jacobian(dt, sample, j = 1)
-    return delta * ddt - delta*(T/mu)*ddx - f(sample)
+    return (delta_u/(t_f**2)) * ddt - (delta_u/(delta_x**2))*(T/mu)*ddx - f(sample)
 
 
 def ic_fn_vel(prediction, sample):
-    dt = jacobian(prediction, sample, j=1)/delta
+    dt = jacobian(prediction, sample, j=1)/delta_u
     ics = torch.zeros_like(dt)
     return dt, ics
 

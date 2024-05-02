@@ -12,23 +12,31 @@ epochs = 1000
 num_inputs = 2 #x, t
 
 
+u_min = -0.4
+u_max = 0.4
+x_min = 0.0
+x_max = 1.0
+t_f = 1.0
+f_min = -3.0
+f_max = 0.0
+delta_u = u_max - u_min
+delta_x = x_max - x_min
+delta_f = f_max - f_min
+
 def hard_constraint(x, y):
-    return x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
+    res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
+    res = (res - u_min)/delta_u
+    return res
 
 def f(sample):
     x = sample[:, 0].reshape(-1, 1)
-    #y = sample[:, 1]
-    """ x_f = sample[:, 2]
-    y_f = sample[:, 3]
-    height = sample[:, 4] """
-    x_f = 0.8
-    #y_f = 0.8
-    height = 1
+    x_f = 0.6
+    height = 1.0
     t = sample[:, -1].reshape(-1, 1)
 
     alpha = 8.9
-    za = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
-    return za
+    z = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    return (z-f_min)/delta_f
 
 
 def pde_fn(prediction, sample):
@@ -38,14 +46,13 @@ def pde_fn(prediction, sample):
     dt = jacobian(prediction, sample, j=1)
     ddx = jacobian(dx, sample, j = 0)
     ddt = jacobian(dt, sample, j = 1)
-    return ddt - (T/mu)*ddx - f(sample)
+    return (delta_u/(t_f**2)) * ddt - (delta_u/(delta_x**2))*(T/mu)*ddx - f(sample)
 
 
 def ic_fn_vel(prediction, sample):
-    dt = jacobian(prediction, sample, j=1)
+    dt = jacobian(prediction, sample, j=1)/delta_u
     ics = torch.zeros_like(dt)
     return dt, ics
-
 
 
 batchsize = 10000
@@ -69,12 +76,12 @@ def init_normal(m):
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20)
 #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_2inputs_nostiffness_ic0hard_icv0",
+    "name": "string_adim_2inputs_nostiffness_ic0hard_icv0",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,

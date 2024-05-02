@@ -10,7 +10,7 @@ from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
 
 name = "output"
-experiment_name = "string_3inputs_nostiffness_force_ic0hard_icv0_4"
+experiment_name = "string_adim_3inputs_nostiffness_force_ic0hard_icv0"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -19,15 +19,13 @@ model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-model_path = os.path.join(model_dir, 'model.pt')
+model_path = os.path.join(model_dir, 'model_660.pt')
 
 num_inputs = 4 #x,
 
 
 def hard_constraint(x, y):
-    res = x[:, 0:1] * (1 - x[:, 0:1]) * y
-    return res
-
+    return x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
 
 def w1(x):
     return 0
@@ -56,13 +54,17 @@ fig, axes = plt.subplots(1, 1, figsize=(15, 5))
 
 tt = np.linspace(0, 1, num=1000)
 x = np.linspace(0, 1, num=1000).reshape(-1, 1)
-x_f = 0.2
-f = 1.0
+x_f = 0.5
+u_min = -0.1
+u_max = 0.1
+delta = u_max - u_min
 preds = []
 for t in tt:     
     X = compose_input(x, x_f, t)
     pred = model(X)
-    preds.append(pred[:, 0].cpu().detach().numpy())
+    pred = pred.cpu().detach().numpy()
+    pred = pred*delta + u_min
+    preds.append(pred)
 preds = np.array(preds)
 #print(preds)
 
