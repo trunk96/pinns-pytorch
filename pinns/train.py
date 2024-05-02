@@ -89,7 +89,7 @@ def train(data):
                 for i in range(len(ic_fns)):
                     loss_ic = ic_loss(x_ic, model, ic_fns[i])
                     loss += loss_ic
-                    ic_losses[i].append(loss_ic)
+                    ic_losses[i].append(loss_ic.item())
                 #loss.requires_grad = True
                 optimizer.zero_grad()
                 loss.backward()
