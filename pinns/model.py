@@ -6,17 +6,17 @@ from collections import OrderedDict
 
 class PINN(nn.Module):
 
-    def __init__(self, layers, activation_function, hard_constraint_fn = None, rff=False, sigma = None):
+    def __init__(self, layers, activation_function, hard_constraint_fn = None, ff=False, sigma = None):
         super(PINN, self).__init__()
         
         # parameters
         self.depth = len(layers) - 1
         
         # set up layer order dict
-        self.activation = activation_function       
+        self.activation = activation_function 
+        self.ff = ff      
         layer_list = list()
-        self.rff = rff
-        if self.rff:
+        if self.ff:
             if sigma == None:
                 return ValueError("If Random Fourier Features embedding is on, then a sigma must be specified")
             self.encoding = GaussianEncoding(sigma=sigma, input_size=layers[0], encoded_size=layers[0])
@@ -36,12 +36,13 @@ class PINN(nn.Module):
         # deploy layers
         self.layers = torch.nn.Sequential(layerDict)
         self.hard_constraint_fn = hard_constraint_fn
-        
-        
 		
     def forward(self, x):
-        if self.rff:
-            x = self.encoding(x)
+        try:
+            if self.ff:
+                x = self.encoding(x)
+        except:
+            pass
         output = self.layers(x)
         if self.hard_constraint_fn != None:
             output = self.hard_constraint_fn(x, output)

@@ -10,7 +10,7 @@ from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
 
 name = "output"
-experiment_name = "string_adim-all_3inputs_nostiffness_force_ic0hard_icv0"
+experiment_name = "string_adim-all_3inputs_nostiffness_force_ic0hard_icv0_1"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -20,6 +20,18 @@ if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
 model_path = os.path.join(model_dir, 'model.pt')
+
+exact_solution = "C:\\Users\\desan\\Documents\\Wolfram Mathematica\\file.csv"
+
+def exact():
+    sol = []
+    with open(exact_solution, "r") as f:
+        for line in f:
+            s = line.split(",")[2].strip()
+            s = s.replace('"', '').replace("{", "").replace("}", "").replace("*^", "E")
+            s = float(s)
+            sol.append(s)
+    return np.array(sol)
 
 num_inputs = 3 #x, x_f, t
 
@@ -38,18 +50,7 @@ def hard_constraint(x, y):
     res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
     res = (res - u_min)/delta_u
     return res
-
-def w1(x):
-    return 0
-
-def w2(x):
-    return 0
-
-a = 1
-def exact(x):
-    x, t = np.split(x, 2, axis=1)
-
-    return (w1(x-a*t) + w1(x+a*t))/2
+   
 
 def compose_input(x, x_f, t):
     X = (x-x_min)/delta_x
@@ -58,14 +59,12 @@ def compose_input(x, x_f, t):
     X = torch.Tensor(X).to(torch.device("cuda:0")).requires_grad_()
     return X
 
-
-model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint).to(torch.device('cuda:0'))
 model = torch.load(model_path)
 
-fig, axes = plt.subplots(1, 1, figsize=(15, 5))
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
-tt = np.linspace(0, t_f, num=1000)
-x = np.linspace(x_min, x_max, num=1000).reshape(-1, 1)
+tt = np.linspace(0, t_f, num=101, endpoint=True)
+x = np.linspace(x_min, x_max, num=101, endpoint=True).reshape(-1, 1)
 x_f = 0.5
 delta = u_max - u_min
 preds = []
@@ -76,7 +75,8 @@ for t in tt:
     pred = pred*delta + u_min
     preds.append(pred)
 preds = np.array(preds)
-#print(preds)
+
+ttrue = exact()
 
 xx, tt = np.meshgrid(x, tt)
 X = np.vstack((np.ravel(xx), np.ravel(tt))).T
@@ -84,16 +84,31 @@ la = len(np.unique(X[:, 0:1]))
 le = len(np.unique(X[:, 1:]))
 
 pred = preds.reshape((le, la))
-
-
+true = ttrue.reshape((le, la), order="F")
 
 # Plot Theta Predicted
-im1 = axes.imshow(pred, cmap='inferno', aspect='auto', origin='lower',
+im1 = axes[0].imshow(pred, cmap='inferno', aspect='auto', origin='lower',
                         extent=[np.unique(X[:, 0:1]).min(), np.unique(X[:, 0:1]).max(), np.unique(X[:, 1:]).min(), np.unique(X[:, 1:]).max()])#, vmin=true.min(), vmax = true.max())
-axes.set_title(f'Predicted')
-axes.set_xlabel('X')
-axes.set_ylabel('T')
-plt.colorbar(im1, ax=axes)
+axes[0].set_title(f'Predicted')
+axes[0].set_xlabel('X')
+axes[0].set_ylabel('T')
+plt.colorbar(im1, ax=axes[0])
+
+# Plot Theta True
+im2 = axes[1].imshow(true, cmap='inferno', aspect='auto', origin='lower',
+                        extent=[np.unique(X[:, 0:1]).min(), np.unique(X[:, 0:1]).max(), np.unique(X[:, 1:]).min(), np.unique(X[:, 1:]).max()])
+axes[1].set_title(f'True')
+axes[1].set_xlabel('X')
+axes[1].set_ylabel('T')
+plt.colorbar(im2, ax=axes[1])
+
+# Plot Difference
+im3 = axes[2].imshow(np.abs(pred-true), cmap='inferno', aspect='auto', origin='lower',
+                        extent=[np.unique(X[:, 0:1]).min(), np.unique(X[:, 0:1]).max(), np.unique(X[:, 1:]).min(), np.unique(X[:, 1:]).max()])
+axes[2].set_title(f'Difference')
+axes[2].set_xlabel('X')
+axes[2].set_ylabel('T')
+plt.colorbar(im3, ax=axes[2])
 
 # Adjust layout
 plt.tight_layout()

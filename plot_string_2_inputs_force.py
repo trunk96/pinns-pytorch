@@ -10,7 +10,7 @@ from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
 
 name = "output"
-experiment_name = "string_adim_2inputs_nostiffness_ic0hard_icv0_rff_1"
+experiment_name = "string_adim-all_2inputs_nostiffness_ic0hard_icv0_1"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -19,37 +19,20 @@ model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-model_path = os.path.join(model_dir, 'model_20.pt')
-
-a = 1
+model_path = os.path.join(model_dir, 'model.pt')
 
 
-def w1(x):
-    return np.zeros_like(x)
-    #return np.sin(x*np.pi)
+exact_solution = "C:\\Users\\desan\\Documents\\Wolfram Mathematica\\file.csv"
 
-
-def w2(z):
-
-    return np.sin(z*np.pi)
-
-
-# TO BE USED IF w1 = 0 and w2 != 0
-def exact(x):
-    a = 1
-    ex = []
-    for elem in x:
-        y, _, = quad(w2, (elem[0]-a*elem[1]), (elem[0]+a*elem[1]))
-        ex.append(1/(2*a) * y)
-    return np.array(ex)
-
-""" 
-# TO BE USED IF w1 != 0 and w2 = 0
-def exact(x):
-    a = 1
-    x, t = np.split(x, 2, axis=1)
-    return (w1(x-a*t) + w1(x+a*t))/2 
-"""
+def exact():
+    sol = []
+    with open(exact_solution, "r") as f:
+        for line in f:
+            s = line.split(",")[2].strip()
+            s = s.replace('"', '').replace("{", "").replace("}", "").replace("*^", "E")
+            s = float(s)
+            sol.append(s)
+    return np.array(sol)
 
 u_min = -0.4
 u_max = 0.4
@@ -60,27 +43,17 @@ def hard_constraint(x, y):
     res = (res - u_min)/delta
     return res
 
-
-batchsize = 10000
-learning_rate = 1e-3 
-
-domainDataset = DomainDataset([0.0]*2, [1.0]*2, 1000)
-icDataset = ICDataset([0.0]*2, [1.0]*2, 1000)
-
-model = PINN([2] + [100]*3 + [1], nn.Tanh, hard_constraint, sigma = 10).to(torch.device('cuda:0'))
 model = torch.load(model_path)
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-x = np.linspace(0, 1, num=100)
-t = np.linspace(0, 1, num=100)
+x = np.linspace(0, 1, num=101, endpoint=True)
+t = np.linspace(0, 1, num=101, endpoint=True)
 xx, tt = np.meshgrid(x, t)
 X = np.vstack((np.ravel(xx), np.ravel(tt))).T
 
 Xp = torch.Tensor(X).to(torch.device('cuda:0')).requires_grad_()
 # Xp = X
-ttrue = exact(X)
-print(ttrue)
-print(X)
+ttrue = exact()
 ppred = model(Xp)
 
 ppred = ppred.cpu().detach().numpy()
@@ -92,7 +65,7 @@ le = len(np.unique(X[:, 1:]))
 #pred = ppred.reshape((le, la)).cpu()
 pred = ppred.reshape((le, la))
 #pred = pred.detach().numpy()
-true = ttrue.reshape((le, la))
+true = ttrue.reshape((le, la), order="F")
 
 # Plot Theta Predicted
 im1 = axes[0].imshow(pred, cmap='inferno', aspect='auto', origin='lower',

@@ -23,6 +23,7 @@ delta_u = u_max - u_min
 delta_x = x_max - x_min
 delta_f = f_max - f_min
 
+
 def hard_constraint(x, y):
     res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
     res = (res - u_min)/delta_u
@@ -81,7 +82,7 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_adim_2inputs_nostiffness_ic0hard_icv0",
+    "name": "string_adim_2inputs_nostiffness_ic0hard_icv0_rff",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,
