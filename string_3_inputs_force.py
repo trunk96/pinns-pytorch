@@ -11,13 +11,13 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 epochs = 1000
 num_inputs = 3 #x, x_f, t
 
-u_min = -2.0
-u_max = 2.0
+u_min = -4.0
+u_max = 4.0
 x_min = 0.0
-x_max = 2.0
-t_f = 10.0
-f_min = -20.0
-f_max = 10.0
+x_max = 1.0
+t_f = 1.0
+f_min = -3.0
+f_max = 0.0
 delta_u = u_max - u_min
 delta_x = x_max - x_min
 delta_f = f_max - f_min
@@ -38,14 +38,16 @@ def hard_constraint(x, y):
     return res
 
 def f(sample):
-    x = sample[:, 0].reshape(-1, 1)
-    x_f = sample[:, 1].reshape(-1, 1)
-    height = 1.0
-    t = sample[:, -1].reshape(-1, 1)
+    x = sample[:, 0].reshape(-1, 1)*(delta_x) + x_min
+    x_f = sample[:, 1].reshape(-1, 1)*(delta_x) + x_min
+    height = 0.1
+    t = sample[:, -1].reshape(-1, 1)*t_f
+    
+    height = (height * delta_f) + f_min
 
-    alpha = 53.59
+    alpha = 8.9
     z = height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
-    return z*(delta_f) + f_min
+    return z
 
 
 def pde_fn(prediction, sample):
@@ -88,8 +90,8 @@ def init_normal(m):
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, factor=0.5)
-#scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+#scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, factor=0.5)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=500, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
