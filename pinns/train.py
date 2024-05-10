@@ -26,6 +26,7 @@ def train(data):
     icdataset = data.get("ic_dataset")
     validationdomaindataset = data.get("validation_domain_dataset")
     validationicdataset = data.get("validation_ic_dataset")
+    additional_data = data.get("additional_data")
 
     current_file = os.getcwd()
     output_dir = os.path.join(current_file, "output", name)
@@ -60,6 +61,8 @@ def train(data):
         "validationDomainDataset": str(validationdomaindataset),
         "validationICDataset": str(validationicdataset)
     } 
+    if additional_data != None:
+        params["additionalData"] = additional_data
     fp = open(params_path, "w", newline='\r\n') 
     json.dump(params, fp)
     fp.close()  

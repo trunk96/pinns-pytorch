@@ -11,16 +11,26 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 epochs = 1000
 num_inputs = 3 #x, x_f, t
 
-u_min = -0.4
-u_max = 0.4
+u_min = -2.0
+u_max = 2.0
 x_min = 0.0
-x_max = 1.0
-t_f = 1.0
-f_min = -3.0
-f_max = 0.0
+x_max = 2.0
+t_f = 10.0
+f_min = -20.0
+f_max = 10.0
 delta_u = u_max - u_min
 delta_x = x_max - x_min
 delta_f = f_max - f_min
+
+params = {
+    "u_min": u_min,
+    "u_max": u_max,
+    "x_min": x_min,
+    "x_max": x_max,
+    "t_f": t_f,
+    "f_min": f_min,
+    "f_max": f_max
+}
 
 def hard_constraint(x, y):
     res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
@@ -33,23 +43,26 @@ def f(sample):
     height = 1.0
     t = sample[:, -1].reshape(-1, 1)
 
-    alpha = 8.9
-    z = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
-    return (z-f_min)/delta_f
+    alpha = 53.59
+    z = height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    return z*(delta_f) + f_min
 
 
 def pde_fn(prediction, sample):
     T = 1
     mu = 1
-    dx = jacobian(prediction, sample, j=0)
-    dt = jacobian(prediction, sample, j=2)
-    ddx = jacobian(dx, sample, j = 0)
-    ddt = jacobian(dt, sample, j = 2)
-    return (delta_u/(t_f**2)) * ddt - (delta_u/(delta_x**2))*(T/mu)*ddx - f(sample)*delta_f - f_min
+    alpha_2 = (T/mu)*(t_f**2)/(delta_x**2)
+    beta = (t_f**2)/delta_u
+    dX = jacobian(prediction, sample, j=0)
+    dtau = jacobian(prediction, sample, j=2)
+    ddX = jacobian(dX, sample, j = 0)
+    ddtau = jacobian(dtau, sample, j = 2)
+    return ddtau - alpha_2*ddX - beta*f(sample)
 
 
 def ic_fn_vel(prediction, sample):
-    dt = jacobian(prediction, sample, j=1)/delta_u
+    dtau = jacobian(prediction, sample, j=1)
+    dt = dtau*delta_u/t_f
     ics = torch.zeros_like(dt)
     return dt, ics
 
@@ -80,7 +93,7 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, 
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_4inputs_nostiffness_force_ic0hard_icv0",
+    "name": "string_3inputs_nostiffness_force_ic0hard_icv0",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,
@@ -91,7 +104,8 @@ data = {
     "domain_dataset": domainDataset,
     "ic_dataset": icDataset,
     "validation_domain_dataset": validationDataset,
-    "validation_ic_dataset": validationicDataset
+    "validation_ic_dataset": validationicDataset,
+    "additional_data": params
 }
 
 train(data)
