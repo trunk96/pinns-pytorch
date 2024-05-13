@@ -11,9 +11,8 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 epochs = 1000
 num_inputs = 2 #x, t
 
-
-u_min = -0.4
-u_max = 0.4
+u_min = -4.0
+u_max = 4.0
 x_min = 0.0
 x_max = 1.0
 t_f = 1.0
@@ -23,35 +22,54 @@ delta_u = u_max - u_min
 delta_x = x_max - x_min
 delta_f = f_max - f_min
 
+params = {
+    "u_min": u_min,
+    "u_max": u_max,
+    "x_min": x_min,
+    "x_max": x_max,
+    "t_f": t_f,
+    "f_min": f_min,
+    "f_max": f_max
+}
 
 def hard_constraint(x, y):
-    res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
-    res = (res - u_min)/delta_u
-    return res
+    """ s = x[:, 0].reshape(-1, 1)*(delta_x) + x_min #x
+    t = x[:, -1].reshape(-1, 1)*t_f #t
+    y = y*(delta_u)+u_min
+    u = (x_min - s) * (x_max - s) * y * t
+    U = (u-u_min)/delta_u """
+    X = x[:, 0].reshape(-1, 1)
+    tau = x[:, -1].reshape(-1, 1)
+    U = ((X-1)*X*(delta_x**2)*t_f*tau)*(y+(u_min/delta_u)) - (u_min/delta_u)
+    return U
 
 def f(sample):
-    x = sample[:, 0].reshape(-1, 1)
-    x_f = 0.6
-    height = 1.0
-    t = sample[:, -1].reshape(-1, 1)
+    x = sample[:, 0].reshape(-1, 1)*(delta_x) + x_min
+    t = sample[:, -1].reshape(-1, 1)*t_f
+    
+    height = -1
+    x_f = 0.2
 
-    alpha = 8.9
-    z = -height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
-    return (z-f_min)/delta_f
+    alpha = 53.59
+    z = height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    return z
 
 
 def pde_fn(prediction, sample):
     T = 1
     mu = 1
-    dx = jacobian(prediction, sample, j=0)
-    dt = jacobian(prediction, sample, j=1)
-    ddx = jacobian(dx, sample, j = 0)
-    ddt = jacobian(dt, sample, j = 1)
-    return (delta_u/(t_f**2)) * ddt - (delta_u/(delta_x**2))*(T/mu)*ddx - f(sample)*delta_f - f_min
+    alpha_2 = (T/mu)*(t_f**2)/(delta_x**2)
+    beta = (t_f**2)/delta_u
+    dX = jacobian(prediction, sample, j=0)
+    dtau = jacobian(prediction, sample, j=1)
+    ddX = jacobian(dX, sample, j = 0)
+    ddtau = jacobian(dtau, sample, j = 1)
+    return ddtau - alpha_2*ddX - beta*f(sample)
 
 
 def ic_fn_vel(prediction, sample):
-    dt = jacobian(prediction, sample, j=1)/delta_u
+    dtau = jacobian(prediction, sample, j=1)
+    dt = dtau*delta_u/t_f
     ics = torch.zeros_like(dt)
     return dt, ics
 
@@ -77,12 +95,12 @@ def init_normal(m):
 model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20)
-#scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+#scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, factor=0.5)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=500, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_adim_2inputs_nostiffness_ic0hard_icv0_rff",
+    "name": "string_2inputs_nostiffness_force_ic0hard_icv0_prova",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,
@@ -93,7 +111,8 @@ data = {
     "domain_dataset": domainDataset,
     "ic_dataset": icDataset,
     "validation_domain_dataset": validationDataset,
-    "validation_ic_dataset": validationicDataset
+    "validation_ic_dataset": validationicDataset,
+    "additional_data": params
 }
 
 train(data)
