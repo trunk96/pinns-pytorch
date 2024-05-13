@@ -11,8 +11,8 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 epochs = 1000
 num_inputs = 3 #x, x_f, t
 
-u_min = -4.0
-u_max = 4.0
+u_min = -0.4
+u_max = 0.4
 x_min = 0.0
 x_max = 1.0
 t_f = 1.0
@@ -33,19 +33,19 @@ params = {
 }
 
 def hard_constraint(x, y):
-    res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
-    res = (res - u_min)/delta_u
-    return res
+    X = x[:, 0].reshape(-1, 1)
+    tau = x[:, -1].reshape(-1, 1)
+    U = ((X-1)*X*(delta_x**2)*t_f*tau)*(y+(u_min/delta_u)) - (u_min/delta_u)
+    return U
 
 def f(sample):
     x = sample[:, 0].reshape(-1, 1)*(delta_x) + x_min
     x_f = sample[:, 1].reshape(-1, 1)*(delta_x) + x_min
-    height = 0.1
     t = sample[:, -1].reshape(-1, 1)*t_f
     
-    height = (height * delta_f) + f_min
+    height = -1
 
-    alpha = 8.9
+    alpha = 53.59
     z = height * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
     return z
 
@@ -56,14 +56,14 @@ def pde_fn(prediction, sample):
     alpha_2 = (T/mu)*(t_f**2)/(delta_x**2)
     beta = (t_f**2)/delta_u
     dX = jacobian(prediction, sample, j=0)
-    dtau = jacobian(prediction, sample, j=2)
+    dtau = jacobian(prediction, sample, j=1)
     ddX = jacobian(dX, sample, j = 0)
     ddtau = jacobian(dtau, sample, j = 2)
     return ddtau - alpha_2*ddX - beta*f(sample)
 
 
 def ic_fn_vel(prediction, sample):
-    dtau = jacobian(prediction, sample, j=1)
+    dtau = jacobian(prediction, sample, j=2)
     dt = dtau*delta_u/t_f
     ics = torch.zeros_like(dt)
     return dt, ics
@@ -95,7 +95,7 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=500, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_3inputs_nostiffness_force_ic0hard_icv0",
+    "name": "string_2inputs_nostiffness_force_ic0hard_icv0_prova",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,
