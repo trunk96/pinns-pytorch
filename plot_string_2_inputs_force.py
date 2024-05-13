@@ -8,9 +8,10 @@ import torch.optim as optim
 import numpy as np
 from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
+import json
 
 name = "output"
-experiment_name = "string_adim-all_2inputs_nostiffness_ic0hard_icv0_1"
+experiment_name = "string_2inputs_nostiffness_force_ic0hard_icv0_prova_1"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -34,14 +35,39 @@ def exact():
             sol.append(s)
     return np.array(sol)
 
-u_min = -0.4
-u_max = 0.4
-delta = u_max - u_min
+def load_params(path):
+    global u_min, u_max, f_min, f_max, x_min, x_max, t_f, delta_u, delta_x, delta_f
+    with open(path, "r") as fp:
+        params = json.load(fp)["additionalData"]
+        u_min = params["u_min"]
+        u_max = params["u_max"]
+        x_min = params["x_min"]
+        x_max = params["x_max"]
+        f_min = params["f_min"]
+        f_max = params["f_max"]
+        t_f = params["t_f"]
+        delta_u = u_max - u_min
+        delta_x = x_max - x_min
+        delta_f = f_max - f_min
+    return
 
-def hard_constraint(x, y):
+load_params(os.path.join(output_dir, "params.json"))
+
+""" def hard_constraint(x, y):
     res = x[:, 0].reshape(-1, 1) * (1 - x[:, 0]).reshape(-1, 1) * y * x[:, -1].reshape(-1, 1)
     res = (res - u_min)/delta
-    return res
+    return res """
+
+def hard_constraint(x, y):
+    """ s = x[:, 0].reshape(-1, 1)*(delta_x) + x_min #x
+    t = x[:, -1].reshape(-1, 1)*t_f #t
+    y = y*(delta_u)+u_min
+    u = (x_min - s) * (x_max - s) * y * t
+    U = (u-u_min)/delta_u """
+    X = x[:, 0].reshape(-1, 1)
+    tau = x[:, -1].reshape(-1, 1)
+    U = ((X-1)*X*(delta_x**2)*t_f*tau)*(y+(u_min/delta_u)) - (u_min/delta_u)
+    return U
 
 model = torch.load(model_path)
 
@@ -57,7 +83,7 @@ ttrue = exact()
 ppred = model(Xp)
 
 ppred = ppred.cpu().detach().numpy()
-ppred = ppred*delta + u_min
+ppred = ppred*delta_u + u_min
 
 la = len(np.unique(X[:, 0:1]))
 le = len(np.unique(X[:, 1:]))
