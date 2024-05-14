@@ -56,7 +56,7 @@ def pde_fn(prediction, sample):
     alpha_2 = (T/mu)*(t_f**2)/(delta_x**2)
     beta = (t_f**2)/delta_u
     dX = jacobian(prediction, sample, j=0)
-    dtau = jacobian(prediction, sample, j=1)
+    dtau = jacobian(prediction, sample, j=2)
     ddX = jacobian(dX, sample, j = 0)
     ddtau = jacobian(dtau, sample, j = 2)
     return ddtau - alpha_2*ddX - beta*f(sample)
@@ -95,7 +95,7 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=500, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_2inputs_nostiffness_force_ic0hard_icv0_prova",
+    "name": "string_3inputs_nostiffness_force_ic0hard_icv0",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,
