@@ -9,7 +9,7 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 
 
 epochs = 1000
-num_inputs = 3 #x, x_f, t
+num_inputs = 4 #x, x_f, f, t
 
 u_min = -0.4
 u_max = 0.4
