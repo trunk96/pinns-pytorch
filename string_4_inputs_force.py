@@ -11,8 +11,8 @@ from pinns.dataset import DomainDataset, ICDataset, ValidationDataset, Validatio
 epochs = 1000
 num_inputs = 4 #x, x_f, f, t
 
-u_min = -0.4
-u_max = 0.4
+u_min = -0.21
+u_max = 0.0
 x_min = 0.0
 x_max = 1.0
 t_f = 1.0
@@ -45,7 +45,7 @@ def f(sample):
     t = sample[:, -1].reshape(-1, 1)*t_f
     
     alpha = 53.59
-    z = h * torch.exp(-400*((x-x_f)**2)) * (4**alpha * t**(alpha - 1) * (1 - t)**(alpha - 1))
+    z = h * torch.exp(-400*((x-x_f)**2)) * (4*t*(1 - t))**(alpha - 1)
     return z
 
 
