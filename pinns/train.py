@@ -22,6 +22,8 @@ def train(data):
     scheduler = data.get("scheduler")
     pde_fn = data.get("pde_fn")
     ic_fns = data.get("ic_fns")
+    time_split = data.get("pde_time_split")
+    eps_time = data.get("eps_time")
     domaindataset = data.get("domain_dataset")
     icdataset = data.get("ic_dataset")
     validationdomaindataset = data.get("validation_domain_dataset")
@@ -81,14 +83,42 @@ def train(data):
         for epoch in range(epochs):
             model.train(True)
             l = []
+            w = torch.ones(time_split)
             for batch_idx, (x_in) in enumerate(dataloader):          
                 (x_ic) = next(iter(ic_dataloader))
-                #print(f"{x_in}, {x_ic}")
                 x_in = torch.Tensor(x_in).to(torch.device('cuda:0'))
+                #sort by acending time
+                x_in = x_in[x_in[:, -1].sort()[1]]
+                #split in minibatches according to time
+                x = {}
+                t = np.linspace(0, 1, time_split+1)
+                last_j = 0
+                for i in range(1, len(t)):
+                    for j in range(last_j, len(x_in)):
+                        if x_in[j, -1] >= t[i]:
+                            if j == last_j:
+                                #we do not have any sample for this interval
+                                x[i-1] = []
+                                break
+                            x[i-1] = x_in[last_j:j-1]
+                            last_j = j
+                            break
+                x[time_split - 1] = x_in[last_j:]
                 x_ic = torch.Tensor(x_ic).to(torch.device('cuda:0'))
-                loss_eqn = residual_loss(x_in, model, pde_fn)
-                loss = loss_eqn
-                residual_losses.append(loss_eqn.item())
+                loss_pde = []
+                for i in range(len(x)):
+                    if len(x[i]) == 0:
+                        loss_pde.append(0)
+                        continue
+                    l_i = residual_loss(x[i], model, pde_fn)
+                    l_i *= w[i]
+                    loss_pde.append(l_i)
+                loss_pde = torch.Tensor(loss_pde).to(torch.device('cuda:0'))
+                print(loss_pde)
+                for i in range(1, len(x)):
+                    w[i] = torch.exp(-eps_time*torch.sum(loss_pde[:i]))
+                loss = sum(loss_pde)/len(loss_pde)
+                residual_losses.append(loss.item())
                 for i in range(len(ic_fns)):
                     loss_ic = ic_loss(x_ic, model, ic_fns[i])
                     loss += loss_ic

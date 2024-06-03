@@ -15,7 +15,7 @@ u_min = -0.21
 u_max = 0.0
 x_min = 0.0
 x_max = 1.0
-t_f = 1.0
+t_f = 10.0
 f_min = -3.0
 f_max = 0.0
 delta_u = u_max - u_min
@@ -45,7 +45,7 @@ def f(sample):
     t = sample[:, -1].reshape(-1, 1)*t_f
     
     alpha = 53.59
-    z = h * torch.exp(-400*((x-x_f)**2)) * (4*t*(1 - t))**(alpha - 1)
+    z = h * torch.exp(-400*((x-x_f)**2))
     return z
 
 
@@ -94,7 +94,8 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=500, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_4inputs_nostiffness_force_ic0hard_icv0",
+    #"name": "string_4inputs_nostiffness_force_ic0hard_icv0",
+    "name": "prova",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,
@@ -102,6 +103,8 @@ data = {
     "scheduler": scheduler,
     "pde_fn": pde_fn,
     "ic_fns": [ic_fn_vel],
+    "pde_time_split":4,
+    "eps_time": 0.1,
     "domain_dataset": domainDataset,
     "ic_dataset": icDataset,
     "validation_domain_dataset": validationDataset,
