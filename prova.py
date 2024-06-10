@@ -51,15 +51,17 @@ def f(sample):
 def pde_fn(model, sample):
     T = 1
     mu = 1
+    k = 1
     alpha_2 = (T/mu)*(t_f**2)/(delta_x**2)
     beta = (t_f**2)/delta_u
+    K = k * t_f
     J, d = _jacobian(model, sample)
     dX = J[0][0]
     dtau = J[0][-1]
     H = _jacobian(d, sample)[0]
     ddX = H[0][0, 0]
     ddtau = H[0][-1, -1]
-    return ddtau - alpha_2*ddX - beta*f(sample)
+    return ddtau - alpha_2*ddX - beta*f(sample) + K*dtau
 
 
 def ic_fn_vel(model, sample):
