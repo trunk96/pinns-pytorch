@@ -11,7 +11,7 @@ from pinns_v2.dataset import DomainDataset, ICDataset
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 epochs = 2000
-num_inputs = 4 #x, x_f, f, t
+num_inputs = 2 #x, t
 
 u_min = -0.21
 u_max = 0.0
@@ -42,8 +42,10 @@ def hard_constraint(x, y):
 
 def f(sample):
     x = sample[0]*(delta_x) + x_min
-    x_f = sample[1]*(delta_x) + x_min
-    h = sample[2]*(delta_f) + f_min
+    #x_f = sample[1]*(delta_x) + x_min
+    x_f = 0.2*(delta_x) + x_min
+    #h = sample[2]*(delta_f) + f_min
+    h = f_min
     
     z = h * torch.exp(-400*((x-x_f)**2))
     return z
@@ -85,7 +87,7 @@ validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, 
 print("Building Validation IC Dataset")
 validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint, ff=True, sigma = 0.5)
+model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint)
 
 def init_normal(m):
     if type(m) == torch.nn.Linear:
