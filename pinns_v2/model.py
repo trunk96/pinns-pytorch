@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from pinns.rff import GaussianEncoding
+from pinns_v2.rff import GaussianEncoding
 from collections import OrderedDict
 
 class PINN(nn.Module):

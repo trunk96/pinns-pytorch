@@ -8,6 +8,7 @@ from pinns_v2.train import train
 from pinns_v2.gradient import _jacobian, _hessian
 from pinns_v2.dataset import DomainDataset, ICDataset
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 epochs = 2000
 num_inputs = 4 #x, x_f, f, t
@@ -90,7 +91,8 @@ def init_normal(m):
     if type(m) == torch.nn.Linear:
         torch.nn.init.xavier_uniform_(m.weight)
 
-model.apply(init_normal)
+model = model.apply(init_normal)
+model = model.to(device)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, factor=0.5)

@@ -17,7 +17,7 @@ def sample_b(sigma: float, size: tuple) -> Tensor:
     return torch.randn(size) * sigma
 
 
-@torch.jit.script
+#@torch.jit.script
 def gaussian_encoding(
         v: Tensor,
         b: Tensor) -> Tensor:
