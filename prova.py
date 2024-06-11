@@ -9,14 +9,14 @@ from pinns_v2.gradient import _jacobian, _hessian
 from pinns_v2.dataset import DomainDataset, ICDataset
 
 
-epochs = 1000
+epochs = 2000
 num_inputs = 4 #x, x_f, f, t
 
 u_min = -0.21
 u_max = 0.0
 x_min = 0.0
 x_max = 1.0
-t_f = 10.0
+t_f = 10
 f_min = -3.0
 f_max = 0.0
 delta_u = u_max - u_min
@@ -72,7 +72,7 @@ def ic_fn_vel(model, sample):
     return dt, ics
 
 
-batchsize = 256
+batchsize = 512
 learning_rate = 1e-3
 
 print("Building Domain Dataset")
@@ -84,7 +84,7 @@ validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, 
 print("Building Validation IC Dataset")
 validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint)
+model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint, ff=True, sigma = 0.5)
 
 def init_normal(m):
     if type(m) == torch.nn.Linear:
@@ -94,12 +94,12 @@ model.apply(init_normal)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, factor=0.5)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=500, gamma=0.1)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=750, gamma=0.1)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    #"name": "string_4inputs_nostiffness_force_ic0hard_icv0",
-    "name": "prova",
+    "name": "string_4inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff_0.5",
+    #"name": "prova",
     "model": model,
     "epochs": epochs,
     "batchsize": batchsize,
@@ -107,7 +107,7 @@ data = {
     "scheduler": scheduler,
     "pde_fn": pde_fn,
     "ic_fns": [ic_fn_vel],
-    "eps_time": 10,
+    "eps_time": 100,
     "domain_dataset": domainDataset,
     "ic_dataset": icDataset,
     "validation_domain_dataset": validationDataset,
