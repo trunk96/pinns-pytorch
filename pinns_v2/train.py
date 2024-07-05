@@ -16,7 +16,7 @@ test_losses = []
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train(data):  
+def train(data, output_to_file = True):  
     name = data.get("name", "main")
     model = data.get("model")
     epochs = data.get("epochs")
@@ -32,44 +32,45 @@ def train(data):
     validationicdataset = data.get("validation_ic_dataset")
     additional_data = data.get("additional_data")
 
-    current_file = os.getcwd()
-    output_dir = os.path.join(current_file, "output", name)
-    
-    if os.path.exists(output_dir):
-        counter = 1
-        while True:
-            output_dir = os.path.join(current_file, "output", name+"_"+str(counter))
-            if not os.path.exists(output_dir):
-                break
-            else:
-                counter +=1
-                
-    model_dir = os.path.join(output_dir, "model")
-    if not os.path.exists(model_dir):
-        os.makedirs(model_dir)
+    if output_to_file:
+        current_file = os.getcwd()
+        output_dir = os.path.join(current_file, "output", name)
         
+        if os.path.exists(output_dir):
+            counter = 1
+            while True:
+                output_dir = os.path.join(current_file, "output", name+"_"+str(counter))
+                if not os.path.exists(output_dir):
+                    break
+                else:
+                    counter +=1
+                    
+        model_dir = os.path.join(output_dir, "model")
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+            
 
-    model_path = os.path.join(model_dir, f"model.pt")
-    file_path = f"{output_dir}/train.txt"
+        model_path = os.path.join(model_dir, f"model.pt")
+        file_path = f"{output_dir}/train.txt"
 
-    params_path = f"{output_dir}/params.json"
-    params = {
-        "name": name,
-        "model": str(model),
-        "epochs": epochs,
-        "batchsize": batchsize,
-        "optimizer": str(optimizer),
-        "scheduler": str(scheduler.state_dict()) if scheduler!=None else "None",
-        "domainDataset": str(domaindataset),
-        "icDataset": str(icdataset),
-        "validationDomainDataset": str(validationdomaindataset),
-        "validationICDataset": str(validationicdataset)
-    } 
-    if additional_data != None:
-        params["additionalData"] = additional_data
-    fp = open(params_path, "w", newline='\r\n') 
-    json.dump(params, fp)
-    fp.close()  
+        params_path = f"{output_dir}/params.json"
+        params = {
+            "name": name,
+            "model": str(model),
+            "epochs": epochs,
+            "batchsize": batchsize,
+            "optimizer": str(optimizer),
+            "scheduler": str(scheduler.state_dict()) if scheduler!=None else "None",
+            "domainDataset": str(domaindataset),
+            "icDataset": str(icdataset),
+            "validationDomainDataset": str(validationdomaindataset),
+            "validationICDataset": str(validationicdataset)
+        } 
+        if additional_data != None:
+            params["additionalData"] = additional_data
+        fp = open(params_path, "w", newline='\r\n') 
+        json.dump(params, fp)
+        fp.close()  
 
     residual_losses = []
     ic_losses = [[] for i in range(len(ic_fns))]
@@ -128,9 +129,9 @@ def train(data):
             print('Validation Epoch: {} \tLoss: {:.10f}'.format(
                     epoch, np.average(validation_losses)))
             #log_file.write('Validation Epoch: {} \tLoss: {:.10f}'.format(epoch, np.average(validation_losses)))
-            #test_losses.append(np.average(validation_losses))
+            test_losses.append(np.average(validation_losses))
                 
-        if epoch % 20 == 0:
+        if output_to_file and epoch % 20 == 0:
             epoch_path = os.path.join(model_dir, f"model_{epoch}.pt")
             torch.save(model, epoch_path)
         
@@ -139,29 +140,32 @@ def train(data):
         train_losses.append(np.average(epoch_losses))
     
     # Save the model
-    torch.save(model, model_path)
-    
-    plt.plot(all_train_losses)
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
-    plt.title('Training Loss')
-    plt.savefig(f'{output_dir}/training_loss.png')
-    plt.clf()
-    plt.plot(train_losses)
-    plt.plot(test_losses)
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
-    plt.title('Training and Validation Loss')
-    plt.savefig(f'{output_dir}/test_loss.png')
-    plt.clf()
-    label = ["Residual loss"]
-    plt.plot(residual_losses)
-    for i in range(len(ic_fns)):
-        plt.plot(ic_losses[i])
-        label.append("IC_loss_"+str(i))
-    plt.legend(label)
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
-    plt.title('Training Losses')
-    plt.savefig(f'{output_dir}/train_losses.png')
-    plt.show()
+    if output_to_file:
+        torch.save(model, model_path)
+        
+        plt.plot(all_train_losses)
+        plt.xlabel('Iterations')
+        plt.ylabel('Loss')
+        plt.title('Training Loss')
+        plt.savefig(f'{output_dir}/training_loss.png')
+        plt.clf()
+        plt.plot(train_losses)
+        plt.plot(test_losses)
+        plt.xlabel('Iterations')
+        plt.ylabel('Loss')
+        plt.title('Training and Validation Loss')
+        plt.savefig(f'{output_dir}/test_loss.png')
+        plt.clf()
+        label = ["Residual loss"]
+        plt.plot(residual_losses)
+        for i in range(len(ic_fns)):
+            plt.plot(ic_losses[i])
+            label.append("IC_loss_"+str(i))
+        plt.legend(label)
+        plt.xlabel('Iterations')
+        plt.ylabel('Loss')
+        plt.title('Training Losses')
+        plt.savefig(f'{output_dir}/train_losses.png')
+        plt.show()
+
+    return np.min(test_losses)
