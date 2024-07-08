@@ -1,4 +1,4 @@
-from pinns_v2.model import PINN
+from pinns_v2.model import PINN, Sin
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -86,7 +86,7 @@ n_calls = 50
 dim_learning_rate = Real(low=1e-4, high=5e-2, name="learning_rate", prior="log-uniform")
 dim_num_dense_layers = Integer(low=1, high=10, name="num_dense_layers")
 dim_num_dense_nodes = Integer(low=5, high=500, name="num_dense_nodes")
-dim_activation = Categorical(categories=[torch.sin, nn.Sigmoid, nn.Tanh, nn.SiLU], name="activation")
+dim_activation = Categorical(categories=[Sin, nn.Sigmoid, nn.Tanh, nn.SiLU], name="activation")
 dim_eps_time = Real(low = 0.1, high = 1000, name="eps_time", prior = "log-uniform")
 
 dimensions = [

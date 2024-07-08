@@ -49,5 +49,12 @@ class PINN(nn.Module):
         #d = torch.autograd.grad(output, x, grad_outputs=torch.ones_like(output), only_inputs=True, create_graph=True)[0]
         #output = torch.hstack((output, d))
         return output
+
+
+class Sin(nn.Module):
+  def __init__(self):
+    pass
+  def forward(self, x):
+    return torch.sin(x)
 	
 					
