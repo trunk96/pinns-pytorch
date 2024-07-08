@@ -114,7 +114,7 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, eps_ti
 
     batchsize = 512
     domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, batchsize = batchsize, period = 3)
-    icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, batchsize = batchsize period = 3)
+    icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, batchsize = batchsize, period = 3)
     validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
     validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
