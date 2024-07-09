@@ -53,7 +53,8 @@ class PINN(nn.Module):
 
 class Sin(nn.Module):
   def __init__(self):
-    pass
+    super(Sin, self).__init__()
+
   def forward(self, x):
     return torch.sin(x)
 	
