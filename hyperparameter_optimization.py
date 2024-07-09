@@ -87,21 +87,21 @@ dim_learning_rate = Real(low=1e-4, high=5e-2, name="learning_rate", prior="log-u
 dim_num_dense_layers = Integer(low=1, high=10, name="num_dense_layers")
 dim_num_dense_nodes = Integer(low=5, high=500, name="num_dense_nodes")
 dim_activation = Categorical(categories=[Sin, nn.Sigmoid, nn.Tanh, nn.SiLU], name="activation")
-dim_eps_time = Real(low = 0.1, high = 1000, name="eps_time", prior = "log-uniform")
+#dim_eps_time = Real(low = 0.1, high = 1000, name="eps_time", prior = "log-uniform")
 
 dimensions = [
     dim_learning_rate,
     dim_num_dense_layers,
     dim_num_dense_nodes,
-    dim_activation,
-    dim_eps_time
+    dim_activation
+    #dim_eps_time
 ]
 
-default_parameters = [1e-3, 3, 100, nn.Tanh, 100]
+default_parameters = [1e-3, 3, 100, nn.Tanh]
 ITERATION = 0
 
 @use_named_args(dimensions = dimensions)
-def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, eps_time):
+def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation):
     global ITERATION
     print(ITERATION, "it number")
     # Print the hyper-parameters.
@@ -109,16 +109,16 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, eps_ti
     print("num_dense_layers:", num_dense_layers)
     print("num_dense_nodes:", num_dense_nodes)
     print("activation:", activation)
-    print("epsilon time causality:", eps_time)
+    #print("epsilon time causality:", eps_time)
     print()
 
     batchsize = 512
-    domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, batchsize = batchsize, period = 3)
-    icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, batchsize = batchsize, period = 3)
+    domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
+    icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
     validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
     validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-    model = PINN([num_inputs] + [num_dense_nodes]*num_dense_layers + [1], nn.Tanh, hard_constraint)
+    model = PINN([num_inputs] + [num_dense_nodes]*num_dense_layers + [1], activation, hard_constraint)
 
     def init_normal(m):
         if type(m) == torch.nn.Linear:
@@ -139,7 +139,7 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, eps_ti
         "scheduler": scheduler,
         "pde_fn": pde_fn,
         "ic_fns": [ic_fn_vel],
-        "eps_time": eps_time,
+        "eps_time": None,
         "domain_dataset": domainDataset,
         "ic_dataset": icDataset,
         "validation_domain_dataset": validationDataset,

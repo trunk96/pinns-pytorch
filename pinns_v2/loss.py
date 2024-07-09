@@ -9,7 +9,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def residual_loss(model, pde_fn, x, t):
     x_in = torch.hstack((x, t))
     r = pde_fn(model, x_in)
-    return r
+    pde_loss = torch.mean(r**2)
+    return pde_loss
 
 def ic_loss(model, ic_fn, x, t):
     x_in = torch.hstack((x, t))
@@ -30,7 +31,7 @@ def compute_loss_ic(model, ic_fns, x_ic):
             loss_ic += loss_ic_i
     return loss_ic
 
-def compute_loss_r(model, pde_fn, eps_time, x_in):
+def compute_loss_r_time_causality(model, pde_fn, eps_time, x_in):
     splitted_dataset = torch.hsplit(x_in, [x_in.shape[1] - 1])
     x = splitted_dataset[0]
     t = splitted_dataset[1]
@@ -42,9 +43,20 @@ def compute_loss_r(model, pde_fn, eps_time, x_in):
         W = torch.exp(- eps_time * (M @ pde_loss_t))
     return W, pde_loss_t
 
+def compute_loss_r(model, pde_fn, x_in):
+    splitted_dataset = torch.hsplit(x_in, [x_in.shape[1] - 1])
+    x = splitted_dataset[0]
+    t = splitted_dataset[1]
+    loss_r = vmap(partial(residual_loss, model, pde_fn), (0, 0))(x, t)
+    return loss_r
+
 
 def loss(model, pde_fn, ic_fns, eps_time, x_in, x_ic):
     loss_ic = compute_loss_ic(model, ic_fns, x_ic)
-    W, pde_loss_t = compute_loss_r(model, pde_fn, eps_time, x_in)
-    loss = torch.mean(W*pde_loss_t + loss_ic)
+    if eps_time != None:
+        W, pde_loss_t = compute_loss_r_time_causality(model, pde_fn, eps_time, x_in)
+        loss = torch.mean(W*pde_loss_t + loss_ic)
+    else:
+        pde_loss = compute_loss_r(model, pde_fn, x_in)
+        loss = torch.mean(pde_loss + loss_ic)
     return loss
