@@ -12,6 +12,7 @@ from skopt import gp_minimize
 from skopt.plots import plot_convergence, plot_objective
 from skopt.space import Real, Categorical, Integer
 from skopt.utils import use_named_args
+import gc
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -87,21 +88,25 @@ dim_learning_rate = Real(low=1e-4, high=5e-2, name="learning_rate", prior="log-u
 dim_num_dense_layers = Integer(low=1, high=10, name="num_dense_layers")
 dim_num_dense_nodes = Integer(low=5, high=500, name="num_dense_nodes")
 dim_activation = Categorical(categories=[Sin, nn.Sigmoid, nn.Tanh, nn.SiLU], name="activation")
+dim_lr_scheduler_epochs = Integer(low=1, high=2000, name="lr_scheduler_epochs")
+dim_lr_scheduler_gamma = Real(low=1e-2, high=1.0, name="lr_scheduler_gamma")
 #dim_eps_time = Real(low = 0.1, high = 1000, name="eps_time", prior = "log-uniform")
 
 dimensions = [
     dim_learning_rate,
     dim_num_dense_layers,
     dim_num_dense_nodes,
-    dim_activation
+    dim_activation,
+    dim_lr_scheduler_epochs,
+    dim_lr_scheduler_gamma
     #dim_eps_time
 ]
 
-default_parameters = [1e-3, 3, 100, nn.Tanh]
+default_parameters = [1e-3, 3, 100, nn.Tanh, 750, 0.1]
 ITERATION = 0
 
 @use_named_args(dimensions = dimensions)
-def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation):
+def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, lr_scheduler_epochs, lr_scheduler_gamma):
     global ITERATION
     print(ITERATION, "it number")
     # Print the hyper-parameters.
@@ -127,7 +132,7 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation):
     model = model.apply(init_normal)
     model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=750, gamma=0.1)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=lr_scheduler_epochs, gamma=lr_scheduler_gamma)
 
     data = {
         "name": "string_4inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff_0.5",
@@ -149,6 +154,9 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation):
 
     
     min_test_loss = train(data, output_to_file=False)
+    del model, optimizer, scheduler, domainDataset, icDataset, validationDataset, validationicDataset
+    gc.collect()
+    torch.cuda.empty_cache()
 
     if np.isnan(min_test_loss):
         min_test_loss = 10**5
@@ -168,8 +176,10 @@ search_result = gp_minimize(
 
 print(search_result.x)
 
-plot_convergence(search_result)
-plot_objective(search_result, show_points=True, size=3.8)
+axes = plot_convergence(search_result)
+axes.flatten()[0].figure.savefig("plot_convergence.png")
+axes = plot_objective(search_result, show_points=True, size=3.8)
+axes.flatten()[0].figure.savefig("plot_objective.png")
 
 
 
