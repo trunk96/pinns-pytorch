@@ -100,6 +100,7 @@ def train(data, output_to_file = True):
             optimizer.zero_grad()
             l.backward()    
             optimizer.step() 
+            optimizer.zero_grad()
 
             if i % 10 ==0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.10f}'.format(
