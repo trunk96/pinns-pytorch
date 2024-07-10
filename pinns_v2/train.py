@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
 import json
+import gc
 
 
 all_train_losses = []
@@ -114,6 +115,10 @@ def train(data, output_to_file = True):
                 
             all_train_losses.append(l.item())  # Storing the loss
             epoch_losses.append(l.item())
+
+            del x_in, x_ic
+            gc.collect()
+            torch.cuda.empty_cache()
 
         if validationicdataset != None and validationdomaindataset != None:
             model.eval()
