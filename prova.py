@@ -10,6 +10,11 @@ from pinns_v2.dataset import DomainDataset, ICDataset
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+#found optimal hyperparameters
+#lr = 0.002203836177626117, num_dense_layers = 8, num_dense_nodes = 308, activation_function = <class 'torch.nn.modules.activation.SiLU'>
+#step_lr_epochs = 1721, step_lr_gamma = 0.15913059595003437
+
 epochs = 2000
 num_inputs = 2 #x, t
 
@@ -76,18 +81,18 @@ def ic_fn_vel(model, sample):
 
 
 batchsize = 512
-learning_rate = 1e-3
+learning_rate = 0.002203836177626117
 
 print("Building Domain Dataset")
-domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 1024, batchsize=batchsize, period = 3)
+domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 1024, batchsize=batchsize, period = 3)
+icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
 print("Building Validation Dataset")
 validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
 print("Building Validation IC Dataset")
 validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-model = PINN([num_inputs] + [100]*3 + [1], nn.Tanh, hard_constraint)
+model = PINN([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint)
 
 def init_normal(m):
     if type(m) == torch.nn.Linear:
@@ -98,7 +103,7 @@ model = model.to(device)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, factor=0.5)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=750, gamma=0.1)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1721, gamma=0.15913059595003437)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
@@ -111,7 +116,7 @@ data = {
     "scheduler": scheduler,
     "pde_fn": pde_fn,
     "ic_fns": [ic_fn_vel],
-    "eps_time": 100,
+    "eps_time": None,
     "domain_dataset": domainDataset,
     "ic_dataset": icDataset,
     "validation_domain_dataset": validationDataset,
