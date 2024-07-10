@@ -116,9 +116,7 @@ def train(data, output_to_file = True):
             all_train_losses.append(l.item())  # Storing the loss
             epoch_losses.append(l.item())
 
-            del x_in, x_ic
-            gc.collect()
-            torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
 
         if validationicdataset != None and validationdomaindataset != None:
             model.eval()
@@ -144,6 +142,8 @@ def train(data, output_to_file = True):
         if scheduler != None:
             scheduler.step()
         train_losses.append(np.average(epoch_losses))
+
+        torch.cuda.empty_cache()
     
     # Save the model
     if output_to_file:
