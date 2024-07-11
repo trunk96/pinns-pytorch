@@ -80,7 +80,7 @@ def ic_fn_vel(model, sample):
     return dt, ics
 
 
-batchsize = 512
+batchsize = 1
 learning_rate = 0.002203836177626117
 
 print("Building Domain Dataset")
@@ -92,7 +92,7 @@ validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, 
 print("Building Validation IC Dataset")
 validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-model = PINN([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint)
+model = PINN([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, modified_MLP=True)
 
 def init_normal(m):
     if type(m) == torch.nn.Linear:
@@ -124,4 +124,4 @@ data = {
     "additional_data": params
 }
 
-train(data)
+train(data, output_to_file=False)
