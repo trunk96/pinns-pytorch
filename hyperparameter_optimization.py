@@ -93,7 +93,7 @@ dim_lr_scheduler_epochs = Integer(low=1, high=2000, name="lr_scheduler_epochs")
 dim_lr_scheduler_gamma = Real(low=1e-2, high=1.0, name="lr_scheduler_gamma")
 dim_eps_time = Real(low = 0.1, high = 1000, name="eps_time", prior = "log-uniform")
 dim_period = Integer(low=1, high=5, name="period")
-dim_dataset_size = Integer(low=100, high=10000)
+dim_dataset_size = Integer(low=100, high=10000, name="dataset_size")
 
 dimensions = [
     dim_learning_rate,
