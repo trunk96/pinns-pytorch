@@ -108,7 +108,7 @@ dimensions = [
     dim_dataset_size
 ]
 
-default_parameters = [1e-3, 3, 100, nn.Tanh, 750, 0.1]
+default_parameters = [1e-3, 3, 100, nn.Tanh, 500, 750, 0.1, 100, 3, 1000]
 ITERATION = 0
 
 @use_named_args(dimensions = dimensions)
