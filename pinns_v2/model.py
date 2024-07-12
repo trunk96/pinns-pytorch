@@ -88,9 +88,6 @@ class ModifiedMLP(nn.Linear):
         super().__init__(in_features, out_features, bias, device=device, dtype=dtype)
     
     def forward(self, x, U, V):
-        if self.bias != None:
-            return (torch.multiply(x, U) + torch.multiply((1-x), V)) @ self.weight + self.bias
-        else:
-            return (torch.multiply(x, U) + torch.multiply((1-x), V)) @ self.weight
+        return torch.nn.functional.linear(torch.multiply(x, U) + torch.multiply((1-x), V), self.weight, self.bias)
 	
 					

@@ -80,7 +80,7 @@ def ic_fn_vel(model, sample):
     return dt, ics
 
 
-batchsize = 1
+batchsize = 512
 learning_rate = 0.002203836177626117
 
 print("Building Domain Dataset")
@@ -107,7 +107,7 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1721, gamma=0.1591305
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "string_4inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff_0.5",
+    "name": "string_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_optimized_modifiedMLP",
     #"name": "prova",
     "model": model,
     "epochs": epochs,
