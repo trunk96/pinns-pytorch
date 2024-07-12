@@ -1,4 +1,4 @@
-from pinns_v2.model import PINN
+from pinns_v2.model import PINN, ModifiedMLP
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -95,7 +95,7 @@ validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batch
 model = PINN([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, modified_MLP=True)
 
 def init_normal(m):
-    if type(m) == torch.nn.Linear:
+    if type(m) == torch.nn.Linear or type(m) == ModifiedMLP:
         torch.nn.init.xavier_uniform_(m.weight)
 
 model = model.apply(init_normal)
