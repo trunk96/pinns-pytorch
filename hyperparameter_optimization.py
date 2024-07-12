@@ -1,4 +1,4 @@
-from pinns_v2.model import PINN, Sin
+from pinns_v2.model import PINN, Sin, ModifiedMLP
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -17,7 +17,7 @@ import gc
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-epochs = 2000
+#epochs = 2000
 num_inputs = 2 #x, t
 
 u_min = -0.21
@@ -88,25 +88,31 @@ dim_learning_rate = Real(low=1e-4, high=5e-2, name="learning_rate", prior="log-u
 dim_num_dense_layers = Integer(low=1, high=10, name="num_dense_layers")
 dim_num_dense_nodes = Integer(low=5, high=500, name="num_dense_nodes")
 dim_activation = Categorical(categories=[Sin, nn.Sigmoid, nn.Tanh, nn.SiLU], name="activation")
+dim_epochs = Integer(low=1, high=2000, name="epochs")
 dim_lr_scheduler_epochs = Integer(low=1, high=2000, name="lr_scheduler_epochs")
 dim_lr_scheduler_gamma = Real(low=1e-2, high=1.0, name="lr_scheduler_gamma")
-#dim_eps_time = Real(low = 0.1, high = 1000, name="eps_time", prior = "log-uniform")
+dim_eps_time = Real(low = 0.1, high = 1000, name="eps_time", prior = "log-uniform")
+dim_period = Integer(low=1, high=5, name="period")
+dim_dataset_size = Integer(low=100, high=10000)
 
 dimensions = [
     dim_learning_rate,
     dim_num_dense_layers,
     dim_num_dense_nodes,
     dim_activation,
+    dim_epochs,
     dim_lr_scheduler_epochs,
-    dim_lr_scheduler_gamma
-    #dim_eps_time
+    dim_lr_scheduler_gamma,
+    dim_eps_time,
+    dim_period,
+    dim_dataset_size
 ]
 
 default_parameters = [1e-3, 3, 100, nn.Tanh, 750, 0.1]
 ITERATION = 0
 
 @use_named_args(dimensions = dimensions)
-def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, lr_scheduler_epochs, lr_scheduler_gamma):
+def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, epochs, lr_scheduler_epochs, lr_scheduler_gamma, eps_time, period, dataset_size):
     global ITERATION
     print(ITERATION, "it number")
     # Print the hyper-parameters.
@@ -117,16 +123,16 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, lr_sch
     #print("epsilon time causality:", eps_time)
     print()
 
-    batchsize = 512
-    domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
-    icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
+    batchsize = 100
+    domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, dataset_size, period = period)
+    icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), dataset_size, period = period)
     validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
     validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-    model = PINN([num_inputs] + [num_dense_nodes]*num_dense_layers + [1], activation, hard_constraint)
+    model = PINN([num_inputs] + [num_dense_nodes]*num_dense_layers + [1], activation, hard_constraint, modified_MLP=True)
 
     def init_normal(m):
-        if type(m) == torch.nn.Linear:
+        if type(m) == torch.nn.Linear or type(m) == ModifiedMLP:
             torch.nn.init.xavier_uniform_(m.weight)
 
     model = model.apply(init_normal)
@@ -135,7 +141,7 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, lr_sch
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=lr_scheduler_epochs, gamma=lr_scheduler_gamma)
 
     data = {
-        "name": "string_4inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff_0.5",
+        "name": "string_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff_0.5",
         #"name": "prova",
         "model": model,
         "epochs": epochs,
@@ -144,7 +150,7 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, lr_sch
         "scheduler": scheduler,
         "pde_fn": pde_fn,
         "ic_fns": [ic_fn_vel],
-        "eps_time": None,
+        "eps_time": eps_time,
         "domain_dataset": domainDataset,
         "ic_dataset": icDataset,
         "validation_domain_dataset": validationDataset,
@@ -177,9 +183,9 @@ search_result = gp_minimize(
 print(search_result.x)
 
 axes = plot_convergence(search_result)
-axes.flatten()[0].figure.savefig("plot_convergence.png")
+axes.figure.savefig("plot_convergence.png")
 axes = plot_objective(search_result, show_points=True, size=3.8)
-axes.flatten()[0].figure.savefig("plot_objective.png")
+axes.figure.savefig("plot_objective.png")
 
 
 
