@@ -120,12 +120,17 @@ def fitness(learning_rate, num_dense_layers, num_dense_nodes, activation, epochs
     print("num_dense_layers:", num_dense_layers)
     print("num_dense_nodes:", num_dense_nodes)
     print("activation:", activation)
-    #print("epsilon time causality:", eps_time)
+    print("epochs:", epochs)
+    print("scheduler_lr_gamma:", lr_scheduler_gamma)
+    print("scheduler_lr_epochs:", lr_scheduler_epochs)
+    print("dataset size:", dataset_size)
+    print("period:", period)
+    print("epsilon time causality:", eps_time)
     print()
 
-    batchsize = 100
-    domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, dataset_size, period = period)
-    icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), dataset_size, period = period)
+    batchsize = 256
+    domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, dataset_size, batchsize=batchsize period = period)
+    icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), dataset_size, batchsize = batchsize, period = period)
     validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
     validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
