@@ -29,6 +29,7 @@ def train(data, output_to_file = True):
     eps_time = data.get("eps_time")
     domaindataset = data.get("domain_dataset")
     icdataset = data.get("ic_dataset")
+    superviseddataset = data.get("supervised_dataset")
     validationdomaindataset = data.get("validation_domain_dataset")
     validationicdataset = data.get("validation_ic_dataset")
     additional_data = data.get("additional_data")
@@ -63,6 +64,7 @@ def train(data, output_to_file = True):
             "optimizer": str(optimizer),
             "scheduler": str(scheduler.state_dict()) if scheduler!=None else "None",
             "domainDataset": str(domaindataset),
+            "supervisedDataset": str(superviseddataset),
             "icDataset": str(icdataset),
             "validationDomainDataset": str(validationdomaindataset),
             "validationICDataset": str(validationicdataset)
@@ -82,6 +84,10 @@ def train(data, output_to_file = True):
     dd = iter(domaindataset)
     icd = iter(icdataset)
 
+    dsd = None
+    if superviseddataset != None:
+        dsd = iter(superviseddataset)
+
     vdd = None
     vicd = None
     if validationdomaindataset != None and validationicdataset != None:
@@ -94,10 +100,16 @@ def train(data, output_to_file = True):
         for i in range(len(domaindataset)):
             x_in = next(dd)          
             x_ic = next(icd)
+            
             x_in = torch.Tensor(x_in).to(device)           
             x_ic = torch.Tensor(x_ic).to(device)
             
-            l = loss(model, pde_fn, ic_fns, eps_time, x_in, x_ic)
+            x_dsd = None
+            if dsd != None:
+                x_dsd = next(dsd)
+                x_dsd = torch.Tensor(x_dsd).to(device)
+            
+            l = loss(model, pde_fn, ic_fns, eps_time, x_in, x_ic, x_dsd = x_dsd)
             optimizer.zero_grad()
             l.backward()    
             optimizer.step() 

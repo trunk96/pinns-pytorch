@@ -3,6 +3,54 @@ import numpy as np
 import math
 
 
+class DomainSupervisedDataset(Dataset):
+    def __init__(self, path, n = None, batchsize = None, t_max = None):
+        self.path = path
+        self.t_max = t_max
+        self.data = self.__exact(self.t_max)
+        if n == None or n>len(self.data):
+            self.n = len(self.data)
+        else:
+            self.n = n
+            self.data = self.data[np.random.choice(self.data.shape[0], n, replace=False), :]
+        if batchsize != None and batchsize > n:
+            batchsize = n
+        self.batchsize = batchsize
+        
+        
+    def __len__(self):
+        return 1 if self.batchsize == None else int(math.ceil(self.n/self.batchsize))
+
+    def __getitem__(self, index):
+        if self.batchsize == None:
+            return self.data
+        else:
+            start = index*self.batchsize
+            end = (index+1)*self.batchsize
+            if end >= self.n:
+                end = self.n - 1
+            return self.data[start:end]
+        
+    def __str__(self):
+        s = f"DomainSupervisedDataset(n={self.n}, batchsize={self.batchsize}, t_max={self.t_max})"
+        return s
+        
+    def __exact(self, t_max = None):
+        sol = []
+        with open(self.path, "r") as f:
+            for line in f:
+                line = line.split(",")
+                s = line[2].strip()
+                s = s.replace('"', '').replace("{", "").replace("}", "").replace("*^", "E")
+                s = float(s)
+                x = float(line[0])
+                t = float(line[1])
+                if t_max != None:
+                    if t <= t_max:
+                        sol.append([x, t, s])
+                else:
+                    sol.append([x, t, s])
+        return np.array(sol)
 
 class DomainDataset(Dataset):
     def __init__(self, xmin, xmax, n, batchsize = None, shuffle = True, period = 1, seed = 1234):

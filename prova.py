@@ -6,7 +6,7 @@ import numpy as np
 #from pinns.train import train
 from pinns_v2.train import train
 from pinns_v2.gradient import _jacobian, _hessian
-from pinns_v2.dataset import DomainDataset, ICDataset
+from pinns_v2.dataset import DomainDataset, ICDataset, DomainSupervisedDataset
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -14,6 +14,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #found optimal hyperparameters
 #lr = 0.002203836177626117, num_dense_layers = 8, num_dense_nodes = 308, activation_function = <class 'torch.nn.modules.activation.SiLU'>
 #step_lr_epochs = 1721, step_lr_gamma = 0.15913059595003437
+
+
+#with modifiedMLP found different hyperparameters (I think they are wrong):
+# l_r = 0.05, num_dense_layers = 10, num_dense_nodes = 5, activation_function = Sin>
+# epochs = 1444, step_lr_epochs = 2000, step_lr_gamma = 0.01, period = 5, dataset_size = 10000
 
 epochs = 2000
 num_inputs = 2 #x, t
@@ -87,6 +92,8 @@ print("Building Domain Dataset")
 domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
 print("Building IC Dataset")
 icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
+print("Building Domain Supervised Dataset")
+dsdDataset = DomainSupervisedDataset("C:\\Users\\desan\\Documents\\Wolfram Mathematica\\file.csv", 1000)
 print("Building Validation Dataset")
 validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
 print("Building Validation IC Dataset")
@@ -119,6 +126,7 @@ data = {
     "eps_time": None,
     "domain_dataset": domainDataset,
     "ic_dataset": icDataset,
+    "supervised_dataset": dsdDataset,
     "validation_domain_dataset": validationDataset,
     "validation_ic_dataset": validationicDataset,
     "additional_data": params
