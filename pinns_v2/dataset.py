@@ -72,7 +72,7 @@ class DomainDataset(Dataset):
         self.counter = 0
 
     def __len__(self):
-        return 1 if self.n_points_per_axis == self.n else int(math.floor(self.n/self.n_points_per_axis) + 1)
+        return 1 if self.n_points_per_axis == self.n else int(math.ceil(self.n/self.n_points_per_axis))
     
     def _sample_items(self, length):
         x = self.rng2.uniform(low=self.xmin[0], high=np.nextafter(self.xmax[0], self.xmax[0]+1), size=(length, 1))
