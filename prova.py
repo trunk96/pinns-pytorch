@@ -71,9 +71,11 @@ def pde_fn(model, sample):
     J, d = _jacobian(model, sample)
     dX = J[0][0]
     dtau = J[0][-1]
-    H = _jacobian(d, sample)[0]
-    ddX = H[0][0, 0]
-    ddtau = H[0][-1, -1]
+    #H = _jacobian(d, sample)[0]
+    #ddX = H[0][0, 0]
+    #ddtau = H[0][-1, -1]
+    ddX = _jacobian(d, sample, i=0, j=0)[0][0]
+    ddtau = _jacobian(d, sample, i=1, j=1)[0][0]
     return ddtau - alpha_2*ddX - beta*f(sample) + K*dtau
 
 

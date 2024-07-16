@@ -51,12 +51,12 @@ def _jacobian(model, input, i=None, j=None):
         return vjp_fn(g), vjp_fn
     else:
         g = torch.zeros_like(input)
-        g[..., i] == 1
+        g[..., j] = 1
         output, d = jvp(model, (input, ), (g, ))
         if i == None:
             return d, None
         else:
-            return d[i], None
+            return d[...,i], None
 
 
 def _hessian(model, input, i = None, j = None):
