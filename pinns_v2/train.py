@@ -110,7 +110,6 @@ def train(data, output_to_file = True):
                 x_dsd = torch.Tensor(x_dsd).to(device)
             
             l = loss(model, pde_fn, ic_fns, eps_time, x_in, x_ic, x_dsd = x_dsd)
-            optimizer.zero_grad()
             l.backward()    
             optimizer.step() 
             optimizer.zero_grad()
@@ -127,8 +126,10 @@ def train(data, output_to_file = True):
                 
             all_train_losses.append(l.item())  # Storing the loss
             epoch_losses.append(l.item())
-        del x_in, x_ic
-        gc.collect()
+
+            del x_in, x_ic, x_dsd, l
+            gc.collect()
+
         torch.cuda.empty_cache()
 
         if validationicdataset != None and validationdomaindataset != None:
@@ -143,6 +144,9 @@ def train(data, output_to_file = True):
                 l = loss(model, pde_fn, ic_fns, eps_time, x_in, x_ic)
                 validation_losses.append(l.item())
 
+                del x_in, x_ic, l
+                gc.collect()
+
             print('Validation Epoch: {} \tLoss: {:.10f}'.format(
                     epoch, np.average(validation_losses)))
             #log_file.write('Validation Epoch: {} \tLoss: {:.10f}'.format(epoch, np.average(validation_losses)))
@@ -156,8 +160,6 @@ def train(data, output_to_file = True):
             scheduler.step()
         train_losses.append(np.average(epoch_losses))
 
-        del x_in, x_ic
-        gc.collect()
         torch.cuda.empty_cache()
     
     # Save the model
