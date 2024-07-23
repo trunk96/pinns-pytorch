@@ -64,9 +64,9 @@ class PINN(nn.Module):
         if self.modified_MLP:
             U = self.U[1](self.U[0](x))
             V = self.V[1](self.V[0](x))
-            output = self.layers[1](self.layers[0](x))
-            for i in range(2, len(self.layers) - 2, 2):
-                output = self.layers[i+1](self.layers[i](output, U, V))
+            output = self.layers[2](self.layers[1](self.layers[0](x)))
+            for i in range(3, len(self.layers) - 3, 3):
+                output = self.layers[i+2](self.layers[i+1](self.layers[i](output, U, V)))
             output = self.layers[-1](output)
         else:
             output = self.layers(x)
