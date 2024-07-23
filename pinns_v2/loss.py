@@ -30,7 +30,7 @@ def compute_loss_ic(model, ic_fns, x_ic):
     t = splitted_dataset[1]
     loss_ic = None
     for i in range(len(ic_fns)):
-        loss_ic_i = vmap(partial(ic_loss, model, ic_fns[i]), (0, 0))(x, t)
+        loss_ic_i = vmap(partial(ic_loss, model, ic_fns[i]), (0, 0), randomness="different")(x, t)
         if i == 0:
             loss_ic = loss_ic_i
         else:
@@ -42,14 +42,14 @@ def compute_loss_dsd(model, x_dsd):
     x = splitted_dataset[0]
     t = splitted_dataset[1]
     u_true = splitted_dataset[2]
-    loss_dsd = vmap(partial(dsd_loss, model, u_true), (0, 0))(x, t)
+    loss_dsd = vmap(partial(dsd_loss, model, u_true), (0, 0), randomness="different")(x, t)
     return loss_dsd
 
 def compute_loss_r_time_causality(model, pde_fn, eps_time, x_in):
     splitted_dataset = torch.hsplit(x_in, [x_in.shape[1] - 1])
     x = splitted_dataset[0]
     t = splitted_dataset[1]
-    r_pred = vmap(vmap(partial(residual_loss, model, pde_fn), (0, None)), (None, 0)) (x, t)
+    r_pred = vmap(vmap(partial(residual_loss, model, pde_fn), (0, None), randomness="different"), (None, 0), randomness="different") (x, t)
     pde_loss_t = torch.mean(r_pred **2, axis = 1)
     with torch.no_grad():
         M = np.triu(np.ones((x_in.shape[0], x_in.shape[0])), k=1).T
@@ -61,7 +61,7 @@ def compute_loss_r(model, pde_fn, x_in):
     splitted_dataset = torch.hsplit(x_in, [x_in.shape[1] - 1])
     x = splitted_dataset[0]
     t = splitted_dataset[1]
-    loss_r = vmap(partial(residual_loss, model, pde_fn), (0, 0))(x, t)
+    loss_r = vmap(partial(residual_loss, model, pde_fn), (0, 0), randomness="different")(x, t)
     return loss_r
 
 
