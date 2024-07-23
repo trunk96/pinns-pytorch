@@ -7,7 +7,7 @@ import math
 
 class PINN(nn.Module):
 
-    def __init__(self, layers, activation_function, hard_constraint_fn = None, modified_MLP = False, ff=False, sigma = None):
+    def __init__(self, layers, activation_function, hard_constraint_fn = None, modified_MLP = False, ff=False, sigma = None, p_dropout=0.2):
         super(PINN, self).__init__()
         
         # parameters
@@ -28,9 +28,11 @@ class PINN(nn.Module):
             self.V = torch.nn.ModuleList([torch.nn.Linear(layers[0], layers[1]), self.activation()])
             layer_list.append(torch.nn.Linear(layers[0], layers[1]))
             layer_list.append(self.activation())
+            layer_list.append(nn.Dropout(p=p_dropout))
             for i in range(1, self.depth - 1):
                 layer_list.append(ModifiedMLP(layers[i], layers[i+1]))
                 layer_list.append(self.activation())
+                layer_list.append(nn.Dropout(p=p_dropout))
             layer_list.append(torch.nn.Linear(layers[-2], layers[-1]))
         else:
             for i in range(self.depth - 1):
