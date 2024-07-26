@@ -42,7 +42,7 @@ class ModifiedMLP(nn.Module):
         V = self.V(x)
 
         output = x
-        for i in range(len(self.hidden_layer), 3):
+        for i in range(0, len(self.hidden_layer), 4):
             output = self.hidden_layer[i](output) #Linear
             output = self.hidden_layer[i+1](output) #Activation
             output = self.hidden_layer[i+2](output, U, V) #Transformer

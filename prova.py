@@ -140,7 +140,5 @@ data = {
     "component_manager": component_manager,
     "additional_data": params
 }
-print(component_manager.get_params())
-exit()
 
 train(data, output_to_file=False)
