@@ -67,6 +67,24 @@ class ResidualComponent(Component):
 
     def get_params(self):
         return {self.name: self.loss.get_params()}
+
+class ResidualTimeCausalityComponent(Component):
+    def __init__(self, pde_fn, dataset, eps_time, number_of_buckets=10, device = None) -> None:
+        super().__init__("ResidualTimeCausality")
+        self.pde_fn = pde_fn
+        self.dataset = dataset
+        self.loss = TimeCausalityLoss(eps_time, bucket_size=number_of_buckets, pde_fn=self.pde_fn)
+        self.iterator = iter(dataset)
+        self.device = device if device != None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def apply(self, model):
+        x_in = next(self.iterator)
+        x_in = torch.Tensor(x_in).to(self.device)
+        loss = self.loss.compute_loss(model, x_in)
+        return loss
+
+    def get_params(self):
+        return {self.name: self.loss.get_params()}
     
 class ICComponent(Component):
     def __init__(self, ic_fns, dataset, device=None) -> None:
