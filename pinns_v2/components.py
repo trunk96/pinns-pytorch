@@ -33,20 +33,30 @@ class ComponentManager:
                 loss += elem.apply(model)
         return loss
 
-    def search(self, name, train = True):
+    def search(self, name, like = False, train = True):
         if train:
             for elem in self._component_list_train:
-                if elem.name == name:
-                    return elem
+                if like :
+                    if name in elem.name:
+                        return elem
+                else:
+                    if elem.name == name:
+                        return elem
             return None
         else:
             for elem in self._component_list_valid:
-                if elem.name == name:
-                    return elem
+                if like :
+                    if name in elem.name:
+                        return elem
+                else:
+                    if elem.name == name:
+                        return elem
             return None
             
     def number_of_iterations(self, train = True):
         residual = self.search("Residual", train)
+        if residual == None:
+            residual = self.search("Residual", like=True, train = True)
         return len(residual.dataset)
     
 
