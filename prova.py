@@ -1,4 +1,5 @@
-from pinns_v2.model import PINN, ModifiedMLP
+from pinns_v2.model import MLP, ModifiedMLP
+from pinns_v2.components import ComponentManager, ResidualComponent, ICComponent, SupervisedComponent
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -87,13 +88,13 @@ def ic_fn_vel(model, sample):
     return dt, ics
 
 
-batchsize = 512
+batchsize = 500
 learning_rate = 0.002203836177626117
 
 print("Building Domain Dataset")
-domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
+domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 1000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
+icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 1000, period = 3)
 print("Building Domain Supervised Dataset")
 dsdDataset = DomainSupervisedDataset("C:\\Users\\desan\\Documents\\Wolfram Mathematica\\file.csv", 1000)
 print("Building Validation Dataset")
@@ -101,10 +102,23 @@ validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, 
 print("Building Validation IC Dataset")
 validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-model = PINN([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, modified_MLP=True)
+model = ModifiedMLP([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint)
+
+component_manager = ComponentManager()
+r = ResidualComponent(pde_fn, domainDataset)
+component_manager.add_train_component(r)
+ic = ICComponent([ic_fn_vel], icDataset)
+component_manager.add_train_component(ic)
+d = SupervisedComponent(dsdDataset)
+component_manager.add_train_component(d)
+r = ResidualComponent(pde_fn, validationDataset)
+component_manager.add_validation_component(r)
+ic = ICComponent([ic_fn_vel], validationicDataset)
+component_manager.add_validation_component(ic)
+
 
 def init_normal(m):
-    if type(m) == torch.nn.Linear or type(m) == ModifiedMLP:
+    if type(m) == torch.nn.Linear:
         torch.nn.init.xavier_uniform_(m.weight)
 
 model = model.apply(init_normal)
@@ -123,15 +137,10 @@ data = {
     "batchsize": batchsize,
     "optimizer": optimizer,
     "scheduler": scheduler,
-    "pde_fn": pde_fn,
-    "ic_fns": [ic_fn_vel],
-    "eps_time": None,
-    "domain_dataset": domainDataset,
-    "ic_dataset": icDataset,
-    "supervised_dataset": dsdDataset,
-    "validation_domain_dataset": validationDataset,
-    "validation_ic_dataset": validationicDataset,
+    "component_manager": component_manager,
     "additional_data": params
 }
+print(component_manager.get_params())
+exit()
 
 train(data, output_to_file=False)
