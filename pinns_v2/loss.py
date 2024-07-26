@@ -66,18 +66,18 @@ class TimeCausalityLoss(LossComponent):
         pde_loss = torch.mean(r**2)
         return pde_loss
 
-    def _compute_loss_r_time_causality(self, model, pde_fn, bucket_number, eps_time, x_in):
+    def _compute_loss_r_time_causality(self, model, pde_fn, bucket_size, eps_time, x_in):
         r_pred = vmap(partial(self._residual_loss, model, pde_fn), (0), randomness="different")(x_in)
-        r_pred = r_pred.reshape(bucket_number, -1)
+        r_pred = r_pred.reshape(bucket_size, -1)
         pde_loss_t = torch.mean(r_pred, axis = 1)
         with torch.no_grad():
-            M = np.triu(np.ones((bucket_number, bucket_number)), k=1).T
+            M = np.triu(np.ones((bucket_size, bucket_size)), k=1).T
             M = torch.Tensor(M).to(device)
             W = torch.exp(- eps_time * (M @ pde_loss_t))
         return W, pde_loss_t
 
     def compute_loss(self, model, x_in):
-        W, pde_loss_t = self._compute_loss_r_time_causality(model, self.pde_fn, self.bucket_number, self.eps_time, x_in)
+        W, pde_loss_t = self._compute_loss_r_time_causality(model, self.pde_fn, self.bucket_size, self.eps_time, x_in)
         loss = torch.mean(W*pde_loss_t)
         self.history.append(loss.item())
         return loss
