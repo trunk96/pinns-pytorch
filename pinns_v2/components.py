@@ -83,7 +83,7 @@ class ResidualTimeCausalityComponent(Component):
         super().__init__("ResidualTimeCausality")
         self.pde_fn = pde_fn
         self.dataset = dataset
-        self.loss = TimeCausalityLoss(eps_time, bucket_size=number_of_buckets, pde_fn=self.pde_fn)
+        self.loss = TimeCausalityLoss(self.pde_fn, eps_time, number_of_buckets)
         self.iterator = iter(dataset)
         self.device = device if device != None else torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

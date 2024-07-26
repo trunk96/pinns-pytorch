@@ -52,7 +52,7 @@ class ICLoss(LossComponent):
 
 
 class TimeCausalityLoss(LossComponent):
-    def __init__(self, eps_time, bucket_size, pde_fn) -> None:
+    def __init__(self, pde_fn, eps_time, bucket_size) -> None:
         super().__init__("TimeCausality")
         self.eps_time = eps_time
         self.bucket_size = bucket_size
