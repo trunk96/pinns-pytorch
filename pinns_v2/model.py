@@ -38,8 +38,8 @@ class ModifiedMLP(nn.Module):
         if self.encoding != None:
             x = self.encoding(x)
 
-        U = self.U(x)
-        V = self.V(x)
+        U = self.U(orig_x)
+        V = self.V(orig_x)
 
         output = x
         for i in range(0, len(self.hidden_layer), 4):
@@ -71,7 +71,7 @@ class MLP(nn.Module):
             )
             layer_list.append(('activation_%d' % i, self.activation()))
             layer_list.append(('dropout_%d' % i, nn.Dropout(p = p_dropout)))
-        layer_list.append(('layer_%d' % len(self.layers) -1, nn.Linear(self.layers[-2], self.layers[-1])))
+        layer_list.append(('layer_%d' % (len(self.layers)-1), nn.Linear(self.layers[-2], self.layers[-1])))
 
         self.mlp = nn.Sequential(OrderedDict(layer_list))
 
