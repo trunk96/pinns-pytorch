@@ -80,6 +80,9 @@ class TimeCausalityLoss(LossComponent):
         W, pde_loss_t = self._compute_loss_r_time_causality(model, self.pde_fn, self.bucket_size, self.eps_time, x_in)
         loss = torch.mean(W*pde_loss_t)
         self.history.append(loss.item())
+        with torch.no_grad():
+            index = torch.max(torch.nonzero(W)).cpu()
+            print(f"Current index: {index} \t Value: {W[index]}")
         return loss
 
 
