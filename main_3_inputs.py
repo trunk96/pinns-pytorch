@@ -1,5 +1,6 @@
 from pinns_v2.model import MLP, ModifiedMLP
-from pinns_v2.components import ComponentManager, ResidualComponent, ICComponent, SupervisedComponent
+from pinns_v2.components import ComponentManager, ResidualComponent, ICComponent, SupervisedComponent, ResidualTimeCausalityComponent
+from pinns_v2.rff import GaussianEncoding 
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -22,7 +23,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # epochs = 1444, step_lr_epochs = 2000, step_lr_gamma = 0.01, period = 5, dataset_size = 10000
 
 epochs = 2000
-num_inputs = 2 #x, t
+num_inputs = 3 #x, t, x_f
 
 u_min = -0.21
 u_max = 0.0
@@ -53,8 +54,8 @@ def hard_constraint(x, y):
 
 def f(sample):
     x = sample[0]*(delta_x) + x_min
-    #x_f = sample[1]*(delta_x) + x_min
-    x_f = 0.2*(delta_x) + x_min
+    x_f = sample[1]*(delta_x) + x_min
+    #x_f = 0.2*(delta_x) + x_min
     #h = sample[2]*(delta_f) + f_min
     h = f_min
     
@@ -76,7 +77,7 @@ def pde_fn(model, sample):
     #ddX = H[0][0, 0]
     #ddtau = H[0][-1, -1]
     ddX = _jacobian(d, sample, i=0, j=0)[0][0]
-    ddtau = _jacobian(d, sample, i=1, j=1)[0][0]
+    ddtau = _jacobian(d, sample, i=2, j=2)[0][0]
     return ddtau - alpha_2*ddX - beta*f(sample) + K*dtau
 
 
@@ -92,25 +93,28 @@ batchsize = 500
 learning_rate = 0.002203836177626117
 
 print("Building Domain Dataset")
-domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 1000, period = 3)
+domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 1000, period = 3)
+icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
 print("Building Domain Supervised Dataset")
-dsdDataset = DomainSupervisedDataset("C:\\Users\\desan\\Documents\\Wolfram Mathematica\\file.csv", 1000)
-print("Building Validation Dataset")
+#dsdDataset = DomainSupervisedDataset("C:\\Users\\desan\\Documents\\Wolfram Mathematica\\file.csv", 1000)
+#print("Building Validation Dataset")
 validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
 print("Building Validation IC Dataset")
 validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-model = ModifiedMLP([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint)
+encoding = GaussianEncoding(sigma = 1.0, input_size=num_inputs, encoded_size=154)
+model = MLP([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, p_dropout=0.0, encoding = encoding)
+#model = ModifiedMLP([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, p_dropout = 0.0)
 
 component_manager = ComponentManager()
-r = ResidualComponent(pde_fn, domainDataset)
+r = ResidualTimeCausalityComponent(pde_fn, domainDataset, 0.001, number_of_buckets = 100)
+#r = ResidualComponent(pde_fn, domainDataset)
 component_manager.add_train_component(r)
 ic = ICComponent([ic_fn_vel], icDataset)
 component_manager.add_train_component(ic)
-d = SupervisedComponent(dsdDataset)
-component_manager.add_train_component(d)
+#d = SupervisedComponent(dsdDataset)
+#component_manager.add_train_component(d)
 r = ResidualComponent(pde_fn, validationDataset)
 component_manager.add_validation_component(r)
 ic = ICComponent([ic_fn_vel], validationicDataset)

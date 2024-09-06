@@ -11,7 +11,7 @@ from pinns.dataset import DomainDataset, ICDataset
 import json
 
 name = "output"
-experiment_name = "string_2inputs_nostiffness_force_ic0hard_icv0_prova_1"
+experiment_name = "string_2inputs_nostiffness_force_damping_ic0hard_icv0_t10.0_optimized_MLP_rff1.0"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -69,28 +69,41 @@ def hard_constraint(x, y):
     U = ((X-1)*X*(delta_x**2)*t_f*tau)*(y+(u_min/delta_u)) - (u_min/delta_u)
     return U
 
+def compose_input(x, t):
+    X = (x-x_min)/delta_x
+    X = np.hstack((X, np.ones_like(x)*(t/t_f)))
+    X = torch.Tensor(X).to(torch.device("cuda:0")).requires_grad_()
+    return X
+
 model = torch.load(model_path)
+x = torch.randn(1, 2).to(torch.device("cuda:0"))
+torch.onnx.export(model, x, os.path.join(output_dir, "nn.onnx"), input_names = ["x, t"], output_names = ["u"])
 
+model.train(False)
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-x = np.linspace(0, 1, num=101, endpoint=True)
-t = np.linspace(0, 1, num=101, endpoint=True)
-xx, tt = np.meshgrid(x, t)
-X = np.vstack((np.ravel(xx), np.ravel(tt))).T
 
-Xp = torch.Tensor(X).to(torch.device('cuda:0')).requires_grad_()
-# Xp = X
+tt = np.linspace(0, t_f, num=1001, endpoint=True)
+x = np.linspace(x_min, x_max, num=101, endpoint=True).reshape(-1, 1)
+x_f = 0.2
+f = -1.0
+
+preds = []
+for t in tt:     
+    X = compose_input(x, t)
+    pred = model(X)
+    pred = pred.cpu().detach().numpy()
+    pred = pred*delta_u + u_min
+    preds.append(pred)
+preds = np.array(preds)
+
 ttrue = exact()
-ppred = model(Xp)
 
-ppred = ppred.cpu().detach().numpy()
-ppred = ppred*delta_u + u_min
-
+xx, tt = np.meshgrid(x, tt)
+X = np.vstack((np.ravel(xx), np.ravel(tt))).T
 la = len(np.unique(X[:, 0:1]))
 le = len(np.unique(X[:, 1:]))
 
-#pred = ppred.reshape((le, la)).cpu()
-pred = ppred.reshape((le, la))
-#pred = pred.detach().numpy()
+pred = preds.reshape((le, la))
 true = ttrue.reshape((le, la), order="F")
 
 # Plot Theta Predicted

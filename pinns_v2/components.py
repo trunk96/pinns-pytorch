@@ -3,7 +3,7 @@ from pinns_v2.common import Component
 import torch
 
 
-class ComponentManager:
+class ComponentManager(Component):
     def __init__(self) -> None:
         self._component_list_train = []
         self._component_list_valid = []

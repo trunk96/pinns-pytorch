@@ -11,7 +11,7 @@ from pinns.dataset import DomainDataset, ICDataset
 import json
 
 name = "output"
-experiment_name = "string_4inputs_nostiffness_force_tindep_nohard_icv0_t1.5_1"
+experiment_name = "string_4inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff_1.0"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -73,7 +73,7 @@ model = torch.load(model_path)
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
-tt = np.linspace(0, t_f, num=151, endpoint=True)
+tt = np.linspace(0, t_f, num=1001, endpoint=True)
 x = np.linspace(x_min, x_max, num=101, endpoint=True).reshape(-1, 1)
 x_f = 0.2
 f = -1.0
