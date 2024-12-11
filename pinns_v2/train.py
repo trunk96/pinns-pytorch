@@ -133,11 +133,13 @@ def train(data, output_to_file = True, print_epoch = 10):
         plt.savefig(f'{output_dir}/train_and_test_loss.png')
         plt.clf()
         label = ["Residual loss", "IC loss"]
-        residual_losses = component_manager.search("Residual", train = False).loss.history
-        ic_losses = component_manager.search("IC", train = False).loss
-        plt.plot(residual_losses)
+        residual_losses = component_manager.search("Residual", train = False)
+        for i in range(len(residual_losses)):
+            plt.plot(residual_losses[i].loss.history)
+            label.append("Residual_loss_"+str(i))
+        ic_losses = component_manager.search("IC", train = False)
         for i in range(len(ic_losses)):
-            plt.plot(ic_losses[i].history)
+            plt.plot(ic_losses[i].loss.history)
             label.append("IC_loss_"+str(i))
         plt.legend(label)
         plt.xlabel('Iterations')
