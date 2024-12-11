@@ -84,7 +84,10 @@ class ResidualComponent(Component):
         return loss
 
     def get_params(self):
-        return {self.name: self.loss.get_params()}
+        p = []
+        for el in self.loss:
+            p.append(el.get_params())
+        return {self.name: p}
 
 class ResidualTimeCausalityComponent(Component):
     def __init__(self, pde_fns, dataset, eps_time, number_of_buckets=10, device = None) -> None:
@@ -105,7 +108,10 @@ class ResidualTimeCausalityComponent(Component):
         return loss
 
     def get_params(self):
-        return {self.name: self.loss.get_params()}
+        p = []
+        for el in self.loss:
+            p.append(el.get_params())
+        return {self.name: p}
     
 class ICComponent(Component):
     def __init__(self, ic_fns, dataset, device=None) -> None:

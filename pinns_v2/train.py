@@ -135,12 +135,18 @@ def train(data, output_to_file = True, print_epoch = 10):
         label = ["Residual loss", "IC loss"]
         residual_losses = component_manager.search("Residual", train = False)
         for i in range(len(residual_losses)):
-            plt.plot(residual_losses[i].loss.history)
-            label.append("Residual_loss_"+str(i))
+            j = 0
+            for single_loss in residual_losses[i].loss:
+                plt.plot(single_loss.history)
+                label.append("Residual_loss_"+str(i)+"_"+str(j))
+                j += 1
         ic_losses = component_manager.search("IC", train = False)
         for i in range(len(ic_losses)):
-            plt.plot(ic_losses[i].loss.history)
-            label.append("IC_loss_"+str(i))
+            j = 0
+            for single_loss in ic_losses[i].loss:
+                plt.plot(single_loss.history)
+                label.append("IC_loss_"+str(i)+"_"+str(j))
+                j += 1
         plt.legend(label)
         plt.xlabel('Iterations')
         plt.ylabel('Loss')
