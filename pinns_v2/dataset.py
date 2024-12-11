@@ -133,10 +133,10 @@ class DomainDatasetSeq(Dataset):
         return 1 if self.batchsize == None else int(math.ceil(self.n/self.n_points))
     
     def _sample_items(self, length):
-        x = np.linspace(self.x_min[0], self.x_max[0], self.dimensions[0])
+        x = np.linspace(self.xmin[0], self.xmax[0], self.dimensions[0],  endpoint=True)
         x = np.repeat(x, np.prod(self.dimensions[1:]))[self.counter:self.counter+length].reshape(length, 1)
         for i in range(1, len(self.dimensions)):
-            s = np.linspace(self.x_min[1], self.x_max[1], self.dimensions[1])
+            s = np.linspace(self.xmin[i], self.xmax[i], self.dimensions[i],  endpoint=True)
             if i == len(self.dimensions)-1:
                 s = np.tile(s, np.prod(self.dimensions[0:i]))[self.counter:self.counter+length].reshape(length, 1)
             else:
@@ -168,16 +168,17 @@ class ICDatasetSeq(DomainDatasetSeq):
     def _sample_items(self, length):
         if len(self.dimensions) == 0:
             return np.zeros((length, ))
-        x = np.linspace(self.x_min[0], self.x_max[0], self.dimensions[0])
+        x = np.linspace(self.xmin[0], self.xmax[0], self.dimensions[0], endpoint=True)
         x = np.repeat(x, np.prod(self.dimensions[1:]))[self.counter:self.counter+length].reshape(length, 1)
         for i in range(1, len(self.dimensions)):
-            s = np.linspace(self.x_min[1], self.x_max[1], self.dimensions[1])
+            s = np.linspace(self.xmin[i], self.xmax[i], self.dimensions[i], endpoint=True)
             if i == len(self.dimensions)-1:
                 s = np.tile(s, np.prod(self.dimensions[0:i]))[self.counter:self.counter+length].reshape(length, 1)
             else:
                 s = np.tile(np.repeat(s, np.prod(self.dimensions[i+1:])), np.prod(self.dimensions[0:i]))[self.counter:self.counter+length].reshape(length, 1)
             x = np.hstack((x, s))
-        x = np.hstack((x, np.zeros(length, )))
+        #print(x.shape)
+        x = np.hstack((x, np.zeros((length,1) )))
         return x
     
 

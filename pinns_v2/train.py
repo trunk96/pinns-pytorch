@@ -15,7 +15,7 @@ test_loss = []
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train(data, output_to_file = True):  
+def train(data, output_to_file = True, print_epoch = 10):  
     name = data.get("name", "main")
     model = data.get("model")
     epochs = data.get("epochs")
@@ -77,16 +77,17 @@ def train(data, output_to_file = True):
 
             train_losses.append(l.item())
 
-            if i % 10 ==0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.10f}'.format(
-                    epoch, i, component_manager.number_of_iterations(train = True),
-                    100. * i / component_manager.number_of_iterations(train = True), l.item()))
+        
                 
                 # Save to log file
                 #log_file.write('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.10f}\n'.format(
                 #    epoch, batch_idx, int(len(dataloader.dataset)/batchsize),
                 #    100. * batch_idx / len(dataloader), loss.item()))
-        
+        if epoch % print_epoch ==0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.10f}'.format(
+                epoch, (i+1), component_manager.number_of_iterations(train = True),
+                100. * (i+1) / component_manager.number_of_iterations(train = True), l.item()))
+
         train_loss.append(np.average(train_losses))
 
         model.eval()
@@ -98,9 +99,9 @@ def train(data, output_to_file = True):
             del l
             gc.collect()
             
-            if i % 10 == 0:
-                print('Validation Epoch: {} \tLoss: {:.10f}'.format(
-                    epoch, np.average(validation_losses)))
+        if epoch % print_epoch ==0:
+            print('Validation Epoch: {} \tLoss: {:.10f}'.format(
+                epoch, np.average(validation_losses)))
             
         
         test_loss.append(np.average(validation_losses))

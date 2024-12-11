@@ -90,6 +90,48 @@ class MLP(nn.Module):
         return output
 
 
+
+
+class NormalizedMLP(nn.Module):
+    def __init__(self, layers, activation_function, range_input, hard_constraint_fn=None, p_dropout=0.2, encoding=None) -> None:
+        super(NormalizedMLP, self).__init__()
+
+        self.norm = Normalization_strat(range_input.clone().detach()) 
+        self.layers = layers
+        self.activation = activation_function
+        self.encoding = encoding
+        if encoding != None:
+            encoding.setup(self)
+
+        layer_list = list()        
+        for i in range(len(self.layers)-2):
+            layer_list.append(
+                ('layer_%d' % i, nn.Linear(layers[i], layers[i+1]))
+            )
+            layer_list.append(('activation_%d' % i, self.activation()))
+            layer_list.append(('dropout_%d' % i, nn.Dropout(p = p_dropout)))
+        layer_list.append(('layer_%d' % (len(self.layers)-1), nn.Linear(self.layers[-2], self.layers[-1])))
+
+        self.mlp = nn.Sequential(OrderedDict(layer_list))
+
+        self.hard_constraint_fn = hard_constraint_fn
+
+    def forward(self, x):
+        orig_x = x
+        x = self.norm(x)
+        if self.encoding != None:
+            x = self.encoding(x)
+
+        output = self.mlp(x)
+
+        if self.hard_constraint_fn != None:
+            output = self.hard_constraint_fn(orig_x, output)
+
+        return output
+
+
+
+
 class Sin(nn.Module):
   def __init__(self):
     super(Sin, self).__init__()
@@ -145,5 +187,11 @@ class FactorizedModifiedLinear(FactorizedLinear):
     def forward(self, x, U , V):
         return torch.nn.functional.linear(torch.multiply(x, U) + torch.multiply((1-x), V), self.s*self.v, self.bias)
 
+class Normalization_strat(nn.Module):
+    def __init__(self, tensor_range):
+        super(Normalization_strat, self).__init__()
+        self.tensor_range = tensor_range
 
+    def forward(self, x):
+        return (x/(self.tensor_range+1e-5))    # element-wise division at each index by tensor_range, for every element of x (a small number 0.00001 is added to handle 0 denominator cases)
 					
