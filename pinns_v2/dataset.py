@@ -167,7 +167,7 @@ class ICDatasetSeq(DomainDatasetSeq):
     
     def _sample_items(self, length):
         if len(self.dimensions) == 0:
-            return np.zeros((length, ))
+            return np.zeros((length, 1))
         x = np.linspace(self.xmin[0], self.xmax[0], self.dimensions[0], endpoint=True)
         x = np.repeat(x, np.prod(self.dimensions[1:]))[self.counter:self.counter+length].reshape(length, 1)
         for i in range(1, len(self.dimensions)):
@@ -189,7 +189,7 @@ class ICDatasetRandom(DomainDatasetRandom):
         
     def _sample_items(self, length):
         if self.dim == 0:
-            return np.zeros((length, ))
+            return np.zeros((length, 1))
         x = self.rng2.uniform(low=self.xmin[0], high=np.nextafter(self.xmax[0], self.xmax[0]+1), size=(length, ))
         for i in range(1, self.dim):
             s = self.rng2.uniform(low=self.xmin[i], high=np.nextafter(self.xmax[i], self.xmax[i]+1), size=(length, ))

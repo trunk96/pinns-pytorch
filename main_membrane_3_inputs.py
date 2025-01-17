@@ -1,5 +1,5 @@
 from pinns_v2.model import MLP, ModifiedMLP
-from pinns_v2.components import ComponentManager, ResidualComponent, ICComponent, SupervisedComponent
+from pinns_v2.components import ComponentManager, ResidualComponent, ICComponent
 from pinns_v2.rff import GaussianEncoding 
 import torch
 import torch.nn as nn
@@ -8,7 +8,7 @@ import numpy as np
 #from pinns.train import train
 from pinns_v2.train import train
 from pinns_v2.gradient import _jacobian, _hessian
-from pinns_v2.dataset import DomainDataset, ICDataset, DomainSupervisedDataset
+from pinns_v2.dataset import DomainDatasetRandom, ICDatasetRandom
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -26,7 +26,7 @@ epochs = 2000
 num_inputs = 3 #x, y, t
 
 u_min = -0.21
-u_max = 0.0
+u_max = 0.21
 x_min = 0.0
 x_max = 1.0
 y_min = 0.0
@@ -112,27 +112,27 @@ batchsize = 500
 learning_rate = 0.002203836177626117
 
 print("Building Domain Dataset")
-domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
+domainDataset = DomainDatasetRandom([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
+icDataset = ICDatasetRandom([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
 #print("Building Domain Supervised Dataset")
 #dsdDataset = DomainSupervisedDataset("C:\\Users\\desan\\Documents\\Wolfram Mathematica\\file.csv", 1000)
 print("Building Validation Dataset")
-validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
+validationDataset = DomainDatasetRandom([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
 print("Building Validation IC Dataset")
-validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
+validationicDataset = ICDatasetRandom([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-encoding = GaussianEncoding(sigma = 1.0, input_size=num_inputs, encoded_size=154)
+encoding = GaussianEncoding(sigma = 10.0, input_size=num_inputs, encoded_size=154)
 model = MLP([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, p_dropout=0.0, encoding = encoding)
 
 component_manager = ComponentManager()
-r = ResidualComponent(pde_fn, domainDataset)
+r = ResidualComponent([pde_fn], domainDataset)
 component_manager.add_train_component(r)
 ic = ICComponent([ic_fn_vel], icDataset)
 component_manager.add_train_component(ic)
 #d = SupervisedComponent(dsdDataset)
 #component_manager.add_train_component(d)
-r = ResidualComponent(pde_fn, validationDataset)
+r = ResidualComponent([pde_fn], validationDataset)
 component_manager.add_validation_component(r)
 ic = ICComponent([ic_fn_vel], validationicDataset)
 component_manager.add_validation_component(ic)
@@ -151,7 +151,7 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1721, gamma=0.1591305
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "membrane_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff1.0_2000epochs",
+    "name": "membrane_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff10.0_2000epochs",
     #"name": "prova",
     "model": model,
     "epochs": epochs,
@@ -162,4 +162,4 @@ data = {
     "additional_data": params
 }
 
-train(data, output_to_file=False)
+train(data, output_to_file=True)
