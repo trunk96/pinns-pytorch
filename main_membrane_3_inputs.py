@@ -1,4 +1,4 @@
-from pinns_v2.model import MLP, ModifiedMLP
+from pinns_v2.model import MLP, ModifiedMLP, TimeFourierMLP
 from pinns_v2.components import ComponentManager, ResidualComponent, ICComponent
 from pinns_v2.rff import GaussianEncoding 
 import torch
@@ -122,8 +122,10 @@ validationDataset = DomainDatasetRandom([0.0]*num_inputs,[1.0]*num_inputs, batch
 print("Building Validation IC Dataset")
 validationicDataset = ICDatasetRandom([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
-encoding = GaussianEncoding(sigma = 10.0, input_size=num_inputs, encoded_size=154)
-model = MLP([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, p_dropout=0.0, encoding = encoding)
+#encoding = GaussianEncoding(sigma = 10.0, input_size=num_inputs, encoded_size=154)
+#model = MLP([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, p_dropout=0.0, encoding = encoding)
+model = TimeFourierMLP([num_inputs] + [308]*8 + [1], nn.SiLU, sigma = 10.0, encoded_size=154, hard_constraint_fn = hard_constraint, p_dropout=0.0)
+
 
 component_manager = ComponentManager()
 r = ResidualComponent([pde_fn], domainDataset)
@@ -151,7 +153,7 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1721, gamma=0.1591305
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "membrane_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff10.0_2000epochs",
+    "name": "membrane_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_timerff10.0_2000epochs",
     #"name": "prova",
     "model": model,
     "epochs": epochs,

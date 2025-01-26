@@ -88,6 +88,45 @@ class MLP(nn.Module):
             output = self.hard_constraint_fn(orig_x, output)
 
         return output
+    
+
+class TimeFourierMLP(nn.Module):
+    def __init__(self, layers, activation_function, sigma, encoded_size, hard_constraint_fn=None, p_dropout=0.2) -> None:
+        super(TimeFourierMLP, self).__init__()
+
+        orig_initial_layer = layers[0]
+        self.layers = layers
+        self.activation = activation_function
+        self.encoding = GaussianEncoding(sigma = sigma, input_size=1, encoded_size=encoded_size)
+        self.encoding.setup(self)
+        # restore layer size for the first layer of the MLP
+        # the first layer size should be the encoding of t (with encoded_size*2 size)
+        # and the other components of the input not encoded
+        self.layers[0] = encoded_size*2 + orig_initial_layer - 1 
+
+        layer_list = list()        
+        for i in range(len(self.layers)-2):
+            layer_list.append(
+                ('layer_%d' % i, nn.Linear(self.layers[i], self.layers[i+1]))
+            )
+            layer_list.append(('activation_%d' % i, self.activation()))
+            layer_list.append(('dropout_%d' % i, nn.Dropout(p = p_dropout)))
+        layer_list.append(('layer_%d' % (len(self.layers)-1), nn.Linear(self.layers[-2], self.layers[-1])))
+
+        self.mlp = nn.Sequential(OrderedDict(layer_list))
+
+        self.hard_constraint_fn = hard_constraint_fn
+
+    def forward(self, x):
+        orig_x = x
+        x = self.encoding(x[-1:]) # just encode time component
+        x = torch.cat((orig_x[:-1], x), dim=0) # concatenate with the other components of the input
+        output = self.mlp(x)
+
+        if self.hard_constraint_fn != None:
+            output = self.hard_constraint_fn(orig_x, output)
+
+        return output
 
 
 
