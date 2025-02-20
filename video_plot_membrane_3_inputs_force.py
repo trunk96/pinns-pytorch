@@ -8,14 +8,14 @@ from pinns.model import PINN
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.func import vmap
 import numpy as np
-from pinns.train import train
-from pinns.dataset import DomainDataset, ICDataset
+from pinns_v2.model import TimeFourierMLP
 import json
 from scipy.io import savemat
 
 name = "output"
-experiment_name = "membrane_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff1.0_2000epochs_discontinuous_force_2"
+experiment_name = "membrane_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_timerff10.0_2000epochs"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -71,9 +71,9 @@ load_params(os.path.join(output_dir, "params.json"))
 
 
 def hard_constraint(x, y_out):
-    X = x[:, 0].reshape(-1, 1)
-    Y = x[:, 1].reshape(-1, 1)
-    tau = x[:, -1].reshape(-1, 1)
+    X = x[0].reshape(-1, 1)
+    Y = x[1].reshape(-1, 1)
+    tau = x[-1].reshape(-1, 1)
 
     x = X*delta_x + x_min
     y = Y*delta_y + y_min
@@ -93,9 +93,12 @@ def compose_input(x, y, t):
     x_in = torch.Tensor(x_in).to(torch.device("cuda:0")).requires_grad_()
     return x_in
 
+#model = TimeFourierMLP([3] + [308]*8 + [1], nn.SiLU, sigma = 10.0, encoded_size=154, hard_constraint_fn = hard_constraint, p_dropout=0.0)
+#model.load_state_dict(torch.load(model_path))
 model = torch.load(model_path)
-x = torch.randn(1, 3).to(torch.device("cuda:0"))
-torch.onnx.export(model, x, os.path.join(output_dir, "nn.onnx"), input_names = ["x, y, t"], output_names = ["u"])
+
+#x = torch.randn(1, 3).to(torch.device("cuda:0"))
+#torch.onnx.export(model, x, os.path.join(output_dir, "nn.onnx"), input_names = ["x, y, t"], output_names = ["u"])
 
 model.train(False)
 #fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -122,12 +125,12 @@ preds = []
 counter = 0
 for t in tt:     
     X = compose_input(x,y,t)
-    pred = model(X)
+    pred = vmap(model)(X)
     pred = pred.cpu().detach().numpy()
     pred = pred*delta_u + u_min
     pred = pred.reshape(len(x), len(y))
     preds.append(pred)
-    """ #plt.cla()
+    #plt.cla()
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     surf = ax.plot_surface(x, y, pred, cmap=cm.coolwarm, linewidth=1, antialiased=False)
     #plt.plot(x, true[counter])
@@ -137,8 +140,8 @@ for t in tt:
     #plt.show()
     plt.savefig(output_dir + "/file%02d.png" % counter)
     plt.close()
-    counter += 1 """
-#generate_video(output_dir)
+    counter += 1
+generate_video(output_dir)
 preds = np.array(preds)
 mdic = {"pinn_data": preds, "X_pinn": x, "Y_pinn": y}
 savemat(output_dir+"/data.mat", mdic)

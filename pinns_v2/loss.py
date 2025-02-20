@@ -63,7 +63,7 @@ class TimeCausalityLoss(LossComponent):
     
     def _residual_loss(self, model, pde_fn, x_in):
         r = pde_fn(model, x_in)
-        pde_loss = torch.mean(r**2)
+        pde_loss = r**2
         return pde_loss
 
     def _compute_loss_r_time_causality(self, model, pde_fn, bucket_size, eps_time, x_in):
