@@ -15,7 +15,7 @@ import json
 from scipy.io import savemat
 
 name = "output"
-experiment_name = "membrane_2inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_timerff10.0_2000epochs"
+experiment_name = "membrane_3inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff1.0_2000epochs"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -71,9 +71,9 @@ load_params(os.path.join(output_dir, "params.json"))
 
 
 def hard_constraint(x, y_out):
-    X = x[0].reshape(-1, 1)
-    Y = x[1].reshape(-1, 1)
-    tau = x[-1].reshape(-1, 1)
+    X = x[:, 0].reshape(-1, 1)
+    Y = x[:, 1].reshape(-1, 1)
+    tau = x[:, -1].reshape(-1, 1)
 
     x = X*delta_x + x_min
     y = Y*delta_y + y_min
@@ -97,8 +97,8 @@ def compose_input(x, y, t):
 #model.load_state_dict(torch.load(model_path))
 model = torch.load(model_path)
 
-#x = torch.randn(1, 3).to(torch.device("cuda:0"))
-#torch.onnx.export(model, x, os.path.join(output_dir, "nn.onnx"), input_names = ["x, y, t"], output_names = ["u"])
+x = torch.randn(1, 3).to(torch.device("cuda:0"))
+torch.onnx.export(model, x, os.path.join(output_dir, "nn.onnx"), input_names = ["x, y, t"], output_names = ["u"])
 
 model.train(False)
 #fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -125,7 +125,7 @@ preds = []
 counter = 0
 for t in tt:     
     X = compose_input(x,y,t)
-    pred = vmap(model)(X)
+    pred = model(X)
     pred = pred.cpu().detach().numpy()
     pred = pred*delta_u + u_min
     pred = pred.reshape(len(x), len(y))
