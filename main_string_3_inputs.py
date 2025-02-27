@@ -8,7 +8,7 @@ import numpy as np
 #from pinns.train import train
 from pinns_v2.train import train
 from pinns_v2.gradient import _jacobian, _hessian
-from pinns_v2.dataset import DomainDataset, ICDataset, DomainSupervisedDataset
+from pinns_v2.dataset import DomainDatasetRandom, ICDatasetRandom, DomainSupervisedDataset
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -97,15 +97,15 @@ batchsize = 500
 learning_rate = 0.002203836177626117
 
 print("Building Domain Dataset")
-domainDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
+domainDataset = DomainDatasetRandom([0.0]*num_inputs,[1.0]*num_inputs, 10000, period = 3)
 print("Building IC Dataset")
-icDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
+icDataset = ICDatasetRandom([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), 10000, period = 3)
 print("Building Domain Supervised Dataset")
 #dsdDataset = DomainSupervisedDataset("C:\\Users\\desan\\Documents\\Wolfram Mathematica\\file.csv", 1000)
 #print("Building Validation Dataset")
-validationDataset = DomainDataset([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
+validationDataset = DomainDatasetRandom([0.0]*num_inputs,[1.0]*num_inputs, batchsize, shuffle = False)
 print("Building Validation IC Dataset")
-validationicDataset = ICDataset([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
+validationicDataset = ICDatasetRandom([0.0]*(num_inputs-1),[1.0]*(num_inputs-1), batchsize, shuffle = False)
 
 encoding = GaussianEncoding(sigma = 1.0, input_size=num_inputs, encoded_size=154)
 model = MLP([num_inputs] + [308]*8 + [1], nn.SiLU, hard_constraint, p_dropout=0.0, encoding = encoding)
