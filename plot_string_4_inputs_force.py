@@ -9,9 +9,10 @@ import numpy as np
 from pinns.train import train
 from pinns.dataset import DomainDataset, ICDataset
 import json
+from scipy.io import savemat
 
 name = "output"
-experiment_name = "string_4inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_rff_1.0"
+experiment_name = "string_4inputs_force_time_damping_ic0hard_icv0_t10.0_MLP_rff1.0"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -61,13 +62,16 @@ def hard_constraint(x, y):
     return U
    
 
-def compose_input(x, x_f, f, t):
-    X = (x-x_min)/delta_x
-    X = np.hstack((X, np.ones_like(x)*((x_f-x_min)/delta_x)))
-    X = np.hstack((X, np.ones_like(x)*((f-f_min)/delta_f)))
-    X = np.hstack((X, np.ones_like(x)*(t/t_f)))
+def compose_input(x, x_f_1, x_f_2, tt):
+    X_ = np.array((x-x_min)/delta_x)
+    X_ = np.tile(X_, (tt.shape[0], 1))
+    X = np.hstack((X_, np.ones_like(X_)*((x_f_1-x_min)/delta_x)))
+    X = np.hstack((X, np.ones_like(X_)*((x_f_2-x_min)/delta_x)))
+    T_ = np.repeat(tt/t_f, x.shape[0]).reshape(-1, 1)
+    X = np.hstack((X, T_))
     X = torch.Tensor(X).to(torch.device("cuda:0")).requires_grad_()
     return X
+
 
 model = torch.load(model_path)
 
@@ -75,17 +79,20 @@ fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
 tt = np.linspace(0, t_f, num=1001, endpoint=True)
 x = np.linspace(x_min, x_max, num=101, endpoint=True).reshape(-1, 1)
-x_f = 0.2
+x_f_1 = 0.5
+x_f_2 = 0.5
 f = -1.0
 
-preds = []
-for t in tt:     
-    X = compose_input(x, x_f, f, t)
-    pred = model(X)
-    pred = pred.cpu().detach().numpy()
-    pred = pred*delta_u + u_min
-    preds.append(pred)
+ 
+X = compose_input(x, x_f_1, x_f_2, tt)
+preds = model(X)
+preds = preds.cpu().detach().numpy()
+preds = preds*delta_u + u_min
 preds = np.array(preds)
+
+preds_matlab = preds.reshape((len(tt), x.shape[0]))
+mdic = {"pinn_data": preds_matlab, "x": x, "t": tt, "x_f_1": x_f_1, "x_f_2": x_f_2}
+savemat(output_dir+"/data.mat", mdic)
 
 ttrue = exact()
 
