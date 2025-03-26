@@ -94,6 +94,7 @@ class ResidualTimeCausalityComponent(Component):
         super().__init__("ResidualTimeCausality")
         self.pde_fns = pde_fns
         self.dataset = dataset
+        self.loss = []
         for fn in pde_fns:
             self.loss.append(TimeCausalityLoss(fn, eps_time, number_of_buckets))
         self.iterator = iter(dataset)

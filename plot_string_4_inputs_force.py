@@ -79,8 +79,8 @@ fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
 tt = np.linspace(0, t_f, num=1001, endpoint=True)
 x = np.linspace(x_min, x_max, num=101, endpoint=True).reshape(-1, 1)
-x_f_1 = 0.5
-x_f_2 = 0.5
+x_f_1 = 0.2
+x_f_2 = 0.8
 f = -1.0
 
  

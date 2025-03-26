@@ -12,10 +12,11 @@ from torch.func import vmap
 import numpy as np
 from pinns_v2.model import TimeFourierMLP
 import json
-from scipy.io import savemat
+from scipy.io import savemat, loadmat
+import time
 
 name = "output"
-experiment_name = "membrane_6inputs_nostiffness_force_damping_ic0hard_icv0_causality_t10.0_timerff1.0_10000epochs_2"
+experiment_name = "membrane_7inputs_forcechanged_time_damping_ic0hard_icv0_t10.0_MLP_rff100.0_12000epochs"
 current_file = os.path.abspath(__file__)
 output_dir = os.path.join(os.path.dirname(current_file), name)
 output_dir = os.path.join(output_dir, experiment_name)
@@ -24,7 +25,7 @@ model_dir = os.path.join(output_dir, "model")
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
 
-model_path = os.path.join(model_dir, 'model_9000.pt')
+model_path = os.path.join(model_dir, 'model.pt')
 
 video_output = False
 
@@ -76,23 +77,34 @@ def hard_constraint(x, y_out):
     U = (u-u_min)/delta_u
     return U
 
-def compose_input(x, y, x_f, y_f, h, t):
-    X = (x-x_min)/delta_x
-    Y = (y-y_min)/delta_y
-    tau = np.ones_like(x)*(t/t_f)
-    X_f = np.ones_like(x)*((x_f-x_min)/delta_x)
-    Y_f = np.ones_like(x)*((y_f-y_min)/delta_y)
-    H = np.ones_like(x)*((h-f_min)/delta_f)
-    x_in = np.vstack((np.ravel(X), np.ravel(Y), np.ravel(X_f), np.ravel(Y_f), np.ravel(H), np.ravel(tau))).T
-    x_in = torch.Tensor(x_in).to(torch.device("cuda:0")).requires_grad_()
-    return x_in
+
+
+def compose_input(x, y, x_f1, y_f1, x_f2, y_f2, tt, meshgrid=True):
+    # Compose input from meshgrid of x and y, repeat as the size of tt and attach in order x_f1, y_f1, x_f2, y_f2, tt
+    X_ = (x - x_min) / delta_x
+    Y_ = (y - y_min) / delta_y
+    X_ = np.tile(X_, (tt.shape[0], 1)).reshape(-1, 1)
+    Y_ = np.tile(Y_, (tt.shape[0], 1)).reshape(-1, 1)
+
+    X_f1 = np.ones_like(X_) * ((x_f1 - x_min) / delta_x)
+    Y_f1 = np.ones_like(Y_) * ((y_f1 - y_min) / delta_y)
+    X_f2 = np.ones_like(X_) * ((x_f2 - x_min) / delta_x)
+    Y_f2 = np.ones_like(Y_) * ((y_f2 - y_min) / delta_y)
+    if meshgrid:
+        T_ = np.repeat(tt / t_f, x.shape[0]*y.shape[0]).reshape(-1, 1)
+    else:
+        T_ = np.repeat(tt / t_f, x.shape[0]).reshape(-1, 1)
+    
+    X = np.hstack((X_, Y_, X_f1, Y_f1, X_f2, Y_f2, T_))
+    X = torch.Tensor(X).to(torch.device("cuda:0")).requires_grad_()
+    return X
 
 #model = TimeFourierMLP([3] + [308]*8 + [1], nn.SiLU, sigma = 10.0, encoded_size=154, hard_constraint_fn = hard_constraint, p_dropout=0.0)
 #model.load_state_dict(torch.load(model_path))
 model = torch.load(model_path)
 
-x = torch.randn(1, 6).to(torch.device("cuda:0"))
-torch.onnx.export(model, x, os.path.join(output_dir, "nn.onnx"), input_names = ["x, y, t"], output_names = ["u"])
+x = torch.randn(1, 7).to(torch.device("cuda:0"))
+torch.onnx.export(model, x, os.path.join(output_dir, "nn.onnx"), input_names = ["x, y, xf1, yf1, xf2, yf2, t"], output_names = ["u"])
 
 model.train(False)
 #fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -101,9 +113,10 @@ tt = np.linspace(0, t_f, num=1001, endpoint=True)
 x = np.linspace(x_min, x_max, num=101, endpoint=True).reshape(-1, 1)
 y = np.linspace(y_min, y_max, num=101, endpoint=True).reshape(-1, 1)
 x, y = np.meshgrid(x, y)
-x_f = 0.5
-y_f = 0.5
-h = -3.0
+x_f1 = 0.7
+y_f1 = 0.7
+x_f2 = 0.3
+y_f2 = 0.3
 
 
 """ ttrue = exact()
@@ -115,20 +128,25 @@ le = len(np.unique(X[:, -1]))
 
 true = ttrue.reshape((le, la), order="F")  """ 
 
-preds = []
-counter = 0
-for t in tt:     
-    X = compose_input(x, y, x_f, y_f, h, t)
-    pred = model(X)
+X = compose_input(x, y, x_f1, y_f1, x_f2, y_f2, tt)
+preds = np.zeros(len(x)*len(y)*len(tt))
+batch = 10000
+for i in range(0, len(X), batch):
+    elem = X[i:i+batch]
+    pred = model(elem)
     pred = pred.cpu().detach().numpy()
     pred = pred*delta_u + u_min
-    pred = pred.reshape(len(x), len(y))
-    preds.append(pred)
+    preds[i:i+batch] = pred.reshape(-1)
 
-    if video_output:
-        #plt.cla()
+preds = preds.reshape(len(tt), len(x), len(y))
+
+
+
+counter = 0
+if video_output:
+    for index, t in enumerate(tt):
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-        surf = ax.plot_surface(x, y, pred, cmap=cm.coolwarm, linewidth=1, antialiased=False)
+        surf = ax.plot_surface(x, y, preds[index, :, :], cmap=cm.coolwarm, linewidth=1, antialiased=False)
         #plt.plot(x, true[counter])
         #ax = plt.gca()
         ax.set_zlim([-0.2, 0.2])
@@ -137,13 +155,42 @@ for t in tt:
         plt.savefig(output_dir + "/file%02d.png" % counter)
         plt.close()
         counter += 1
-
-if video_output:
     generate_video(output_dir)
+    
 preds = np.array(preds)
-print(preds.shape)
 mdic = {"pinn_data": preds, "X_pinn": x, "Y_pinn": y}
-savemat(output_dir+"/data.mat", mdic)
+savemat(output_dir+"/data_all.mat", mdic)
+
+
+node_path = "C:\\Users\\desan\\Desktop\\RomeTech\\nodes.mat"
+if os.path.exists(node_path):
+    start_time = time.time()
+    nodes = loadmat(node_path)["nodes"]
+    x = nodes[0, :].reshape(-1, 1)
+    y = nodes[1, :].reshape(-1, 1)
+    X = compose_input(x, y, x_f1, y_f1, x_f2, y_f2, tt, meshgrid=False)
+    preds = np.zeros(len(x)*len(tt))
+    batch = 10000
+    batch = min(batch, len(X))
+    for i in range(0, len(X), batch):
+        if i+batch > len(X):
+            elem = X[i:]
+        else:
+            elem = X[i:i+batch]
+        pred = model(elem)
+        pred = pred.cpu().detach().numpy()
+        pred = pred*delta_u + u_min
+        if i+batch > len(X):
+            preds[i:] = pred.reshape(-1)
+        else:
+            preds[i:i+batch] = pred.reshape(-1)
+    end_time = time.time()
+    print("Time elapsed for prediction: ", end_time - start_time)    
+
+    preds = preds.reshape(len(tt), len(x))
+    preds = np.array(preds)
+    mdic = {"pinn_data": preds, "X_pinn": x, "Y_pinn": y}
+    savemat(output_dir+"/data.mat", mdic)
 
 
 

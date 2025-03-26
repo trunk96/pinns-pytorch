@@ -1,5 +1,5 @@
 from pinns_v2.model import MLP, ModifiedMLP, TimeFourierMLP
-from pinns_v2.components import ComponentManager, ResidualComponent, ICComponent
+from pinns_v2.components import ComponentManager, ResidualComponent, ICComponent, ResidualTimeCausalityComponent
 from pinns_v2.rff import GaussianEncoding 
 import torch
 import torch.nn as nn
@@ -22,7 +22,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # l_r = 0.05, num_dense_layers = 10, num_dense_nodes = 5, activation_function = Sin>
 # epochs = 1444, step_lr_epochs = 2000, step_lr_gamma = 0.01, period = 5, dataset_size = 10000
 
-epochs = 5000
+epochs = 12000
 num_inputs = 7 #x, y, x_f1, y_f1, x_f2, y_f2, t
 
 u_min = -0.21
@@ -81,8 +81,8 @@ def f(sample):
     #h = sample[2]*(delta_f) + f_min
     h = f_min
 
-    z1 = h * torch.exp(-400*((x-x_f1)**2)*(y-y_f1)**2)*torch.exp(-(t-t_1)**2/(2*0.5**2))
-    z2 = h * torch.exp(-400*((x-x_f2)**2)*(y-y_f2)**2)*torch.exp(-(t-t_2)**2/(2*0.5**2))
+    z1 = h * torch.exp(-400*(((x-x_f1)**2)+((y-y_f1)**2)))*torch.exp(-(t-t_1)**2/(2*0.5**2))
+    z2 = h * torch.exp(-400*(((x-x_f2)**2)+((y-y_f2)**2)))*torch.exp(-(t-t_2)**2/(2*0.5**2))
     return z1+z2
 
 
@@ -156,11 +156,11 @@ model = model.to(device)
 # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = (0.9,0.99),eps = 10**-15)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, factor=0.5)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.9995)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.9997)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 data = {
-    "name": "membrane_7inputs_force_time_damping_ic0hard_icv0_t10.0_MLP_rff1.0_2000epochs",
+    "name": "membrane_7inputs_force_time_damping_ic0hard_icv0_t10.0_MLP_rff1.0_12000epochs",
     #"name": "prova",
     "model": model,
     "epochs": epochs,
